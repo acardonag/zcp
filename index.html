@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBVA Colombia - App</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#004481">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BBVA">
+    <link rel="apple-touch-icon" href="icono-pwa.png">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons (as simple link or inline SVGs later) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- SCREEN 1: WELCOME -->
+        <section id="welcome-screen" class="screen active fade-in">
+            <div class="logo-container">
+                <div class="bbva-logo">BBVA</div>
+            </div>
+            <div class="welcome-content">
+                <h1>Hola, bienvenido</h1>
+                <p>Gestiona tus finanzas de forma segura</p>
+            </div>
+            <div class="button-group">
+                <button id="to-register" class="btn-primary">Registrarse</button>
+                <button id="to-login" class="btn-link">Iniciar sesión</button>
+            </div>
+            <p style="margin-top: 50px; font-size: 10px; color: #999; text-align: center; width: 100%;">V 12.4.0 • BBVA Colombia S.A.</p>
+        </section>
+
+        <!-- SCREEN 2: REGISTRATION -->
+        <section id="register-screen" class="screen fade-in">
+            <div class="register-card">
+                <h1>Crea tu cuenta</h1>
+                <p>Completa tus datos para empezar</p>
+                <div class="input-container">
+                    <span class="input-label">Nombre completo</span>
+                    <input type="text" id="reg-name" class="input-field" placeholder="Nombre completo">
+                </div>
+                <div class="input-container">
+                    <span class="input-label">Identificación</span>
+                    <input type="text" id="reg-id" class="input-field" placeholder="Cédula de ciudadanía">
+                </div>
+                <div class="input-container">
+                    <span class="input-label">Correo electrónico</span>
+                    <input type="email" id="reg-email" class="input-field" placeholder="tu@correo.com">
+                </div>
+                <button id="do-register" class="btn-primary" style="margin-top: 20px;">Crear cuenta &nbsp; →</button>
+                <button class="btn-link" id="reg-to-login">Ya tengo una cuenta</button>
+                <div id="reg-toast" class="pi-toast pi-toast-hidden" style="margin-top:16px;">
+                    <i data-lucide="check-circle" style="width:18px;height:18px;flex-shrink:0;"></i>
+                    <span>Cuenta creada exitosamente. Bienvenido.</span>
+                </div>
+                <p style="font-size: 10px; color: #999; text-align: center; margin-top: 20px;">
+                    Al registrarte, aceptas nuestros <span
+                        style="color: var(--bbva-navy); text-decoration: underline;">Términos y Condiciones</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: LOGIN -->
+        <section id="login-screen" class="screen fade-in">
+            <div class="login-header">
+                <i data-lucide="arrow-left" style="color: var(--bbva-navy); cursor: pointer;" id="login-back"></i>
+                <div style="flex: 1; text-align: center; font-weight: 700; color: var(--bbva-navy);">BBVA</div>
+                <i data-lucide="x" style="color: var(--bbva-navy); cursor: pointer;"></i>
+            </div>
+            <div class="login-content">
+                <h2 id="login-greeting">Hola, <span id="user-display">Invitado</span></h2>
+                <div class="input-container" style="margin-top: 30px;">
+                    <span class="input-label">Ingresa tu contraseña</span>
+                    <input type="password" id="login-password" class="input-field" placeholder="Contraseña">
+                    <div id="login-error" class="login-error login-error-hidden">
+                        <i data-lucide="alert-circle" style="width:15px;height:15px;flex-shrink:0;"></i>
+                        <span>Contraseña incorrecta. Inténtalo de nuevo.</span>
+                    </div>
+                </div>
+                <button id="do-login" class="btn-primary" style="margin-top: 20px;">Ingresar</button>
+                <button id="show-biometrics" class="biometric-btn">
+                    <i data-lucide="fingerprint"></i>
+                    Ingresar con biometría
+                </button>
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="#"
+                        style="color: var(--bbva-navy); font-size: 14px; text-decoration: none; font-weight: 600;">¿Olvidaste
+                        tu contraseña?</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: DASHBOARD -->
+        <section id="dashboard-screen" class="screen fade-in" style="flex: 1;">
+            <div class="dashboard-scroll-area">
+
+                <!-- Header -->
+                <div class="dashboard-header">
+                    <div class="dash-top-bar">
+                        <div class="bbva-logo-white">BBVA</div>
+                        <i data-lucide="menu" style="color: white; cursor: pointer;"></i>
+                    </div>
+                    <div class="user-profile">
+                        <div>
+                            <p class="dash-greeting">Hola <span id="dash-user">Augusto</span></p>
+                            <p class="dash-change-user">Cambiar usuario</p>
+                        </div>
+                        <div class="user-avatar" id="user-avatar">AC</div>
+                    </div>
+                    <div class="balance-section">
+                        <h3>SALDO TOTAL</h3>
+                        <div class="balance-amount">$ 12.450.000 <span class="balance-currency">COP</span></div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta Visa -->
+                <div class="card-container">
+                    <div class="bank-card">
+                        <div class="bank-card-top">
+                            <div class="card-info">
+                                <i data-lucide="credit-card" style="color: var(--bbva-light-blue); width:20px; height:20px;"></i>
+                                <div>
+                                    <span class="card-type">Visa Platinum</span>
+                                    <span class="card-number">**** 4592</span>
+                                </div>
+                            </div>
+                            <span class="card-brand">VISA</span>
+                        </div>
+                        <div class="card-balance">
+                            <p class="available-limit">Cupo disponible</p>
+                            <p class="limit-amount">$ 4.200.000</p>
+                        </div>
+                        <div class="card-action">
+                            <span>Pagar tarjeta</span>
+                            <i data-lucide="chevron-right" style="width:16px; height:16px; color:#999;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagos rápidos -->
+                <div class="quick-payments">
+                    <div class="quick-payments-header">
+                        <h4>Pagos rápidos</h4>
+                        <i data-lucide="sliders-horizontal" style="width:18px; height:18px; color:#999; cursor:pointer;"></i>
+                    </div>
+                    <div class="contacts-scroll">
+                        <div class="contact-item">
+                            <div class="contact-bubble new-contact">
+                                <i data-lucide="user-plus" style="width:20px; height:20px; color: var(--bbva-navy);"></i>
+                            </div>
+                            <span class="contact-name">Nuevo</span>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-bubble" style="background:#E3F2FD; color:#1565C0;">PP</div>
+                            <span class="contact-name">Pyu Payu</span>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-bubble" style="background:#FFF9C4; color:#F57F17;">JO</div>
+                            <span class="contact-name">Juan Ospi...</span>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-bubble" style="background:#E8F5E9; color:#2E7D32;">MM</div>
+                            <span class="contact-name">Maria M...</span>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-bubble" style="background:#FFEBEE; color:#C62828;">JS</div>
+                            <span class="contact-name">Juan S...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner promocional -->
+                <div class="promo-banner" id="promo-banner-btn">
+                    <div class="promo-content">
+                        <!-- Estado: inactivo -->
+                        <div id="promo-inactive">
+                            <p class="promo-title">Habilita pagos inteligentes</p>
+                            <button class="promo-btn">ACTIVAR AHORA</button>
+                        </div>
+                        <!-- Estado: activo -->
+                        <div id="promo-active" style="display:none;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                                <i data-lucide="check-circle" style="width:18px;height:18px;color:#00c9a7;"></i>
+                                <span style="color:#00c9a7;font-size:12px;font-weight:700;">ACTIVO</span>
+                            </div>
+                            <p class="promo-title" style="margin-bottom:6px;">Pagos inteligentes activados</p>
+                            <p style="color:rgba(255,255,255,0.75);font-size:12px;margin:0;">Tus pagos autom&aacute;ticos est&aacute;n funcionando</p>
+                        </div>
+                    </div>
+                    <div class="promo-icon">
+                        <i data-lucide="wifi" style="width:60px; height:60px; color:rgba(255,255,255,0.2); transform: rotate(90deg);"></i>
+                    </div>
+                </div>
+
+                <!-- Mis llaves favoritas -->
+                <div class="card-container" style="margin-bottom: 16px;">
+                    <div class="menu-row">
+                        <div class="menu-row-left">
+                            <i data-lucide="key-round" style="width:20px; height:20px; color: var(--bbva-navy);"></i>
+                            <span>Mis llaves favoritas</span>
+                        </div>
+                        <i data-lucide="chevron-right" style="width:18px; height:18px; color:#999;"></i>
+                    </div>
+                </div>
+
+                <!-- Pago pendiente (demo) -->
+                <a id="pending-payment-card" class="pending-payment-card" href="payment-approval.html?product=Camiseta+de+la+selecci%C3%B3n+Colombia&amount=320000&reference=29384756&card=Visa+*4592&merchant=Adidas+Colombia">
+                    <div class="pending-left">
+                        <div class="pending-dot"></div>
+                        <div>
+                            <p class="pending-title">Pago pendiente de aprobación</p>
+                            <p class="pending-sub">Camiseta de la selección &bull; <strong>$320.000</strong></p>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" style="width:18px;height:18px;color:#999;flex-shrink:0;"></i>
+                </a>
+
+            </div><!-- end dashboard-scroll-area -->
+
+            <!-- Bottom Nav -->
+            <div class="bottom-nav">
+                <div class="nav-item active">
+                    <i data-lucide="home"></i>
+                    <span>Inicio</span>
+                </div>
+                <div class="nav-item">
+                    <i data-lucide="arrow-left-right"></i>
+                    <span>Transferir</span>
+                </div>
+                <div class="center-btn">
+                    <i data-lucide="plus"></i>
+                </div>
+                <div class="nav-item">
+                    <i data-lucide="receipt"></i>
+                    <span>Pagos</span>
+                </div>
+                <div class="nav-item" id="nav-logout">
+                    <i data-lucide="log-out"></i>
+                    <span>Salir</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: PAGOS INTELIGENTES -->
+        <section id="pagos-inteligentes-screen" class="screen fade-in">
+            <!-- Header -->
+            <div class="pi-header">
+                <button id="pi-back" class="pi-back-btn"><i data-lucide="arrow-left"></i></button>
+                <span class="pi-header-title">Pagos Inteligentes</span>
+                <span></span>
+            </div>
+
+            <div class="pi-scroll-area">
+                <!-- Toggle card -->
+                <div class="pi-card">
+                    <div class="pi-toggle-row">
+                        <div>
+                            <p class="pi-toggle-title">Activar Pagos<br>Inteligentes</p>
+                            <p class="pi-toggle-sub">Simplifica tu vida financiera</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="pi-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="pi-card">
+                    <p class="pi-section-label">¿QUÉ INCLUYE ESTE SERVICIO?</p>
+                    <div class="pi-feature">
+                        <div class="pi-feature-icon">
+                            <i data-lucide="refresh-cw" style="width:20px;height:20px;color:var(--bbva-light-blue);"></i>
+                        </div>
+                        <div>
+                            <p class="pi-feature-title">Pagos automáticos</p>
+                            <p class="pi-feature-desc">Programamos tus servicios recurrentes para que nunca olvides una fecha de vencimiento.</p>
+                        </div>
+                    </div>
+                    <div class="pi-feature">
+                        <div class="pi-feature-icon">
+                            <i data-lucide="shield-check" style="width:20px;height:20px;color:var(--bbva-light-blue);"></i>
+                        </div>
+                        <div>
+                            <p class="pi-feature-title">Seguridad mejorada</p>
+                            <p class="pi-feature-desc">Detección proactiva de fraudes y protección de datos con cifrado de nivel bancario.</p>
+                        </div>
+                    </div>
+                    <div class="pi-feature" style="margin-bottom:0;">
+                        <div class="pi-feature-icon">
+                            <i data-lucide="trending-up" style="width:20px;height:20px;color:var(--bbva-light-blue);"></i>
+                        </div>
+                        <div>
+                            <p class="pi-feature-title">Análisis de gastos</p>
+                            <p class="pi-feature-desc">Recibe reportes inteligentes sobre tus hábitos de consumo y sugerencias de ahorro.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Términos -->
+                <p class="pi-terms">
+                    Al activar esta función, aceptas los
+                    <a href="#" style="color:var(--bbva-light-blue);">términos y condiciones</a>
+                    del servicio de pagos digitales.
+                </p>
+
+                <!-- Toast de éxito -->
+                <div id="pi-toast" class="pi-toast pi-toast-hidden">
+                    <i data-lucide="check-circle" style="width:18px;height:18px;flex-shrink:0;"></i>
+                    <span id="pi-toast-msg">Configuración guardada correctamente</span>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="pi-footer">
+                <button class="pi-dark-btn" id="pi-dark-mode" title="Modo oscuro">
+                    <i data-lucide="moon" style="width:18px;height:18px;"></i>
+                </button>
+                <button class="btn-primary pi-save-btn" id="pi-save">Guardar configuración</button>
+            </div>
+        </section>
+
+        <!-- LOGOUT MODAL -->
+        <div id="logout-modal" class="modal-overlay">
+            <div class="modal-content logout-modal-content">
+                <div class="logout-icon">
+                    <i data-lucide="log-out" style="width:32px;height:32px;color:var(--bbva-navy);"></i>
+                </div>
+                <h3 style="color:var(--bbva-navy);margin:0 0 8px;">Cerrar sesi&oacute;n</h3>
+                <p style="color:#666;font-size:14px;margin:0 0 28px;">¿Est&aacute;s seguro de que deseas salir de tu cuenta?</p>
+                <button id="logout-confirm" class="btn-primary" style="margin-bottom:12px;">S&iacute;, cerrar sesi&oacute;n</button>
+                <button id="logout-cancel" class="btn-link" style="color:#888;">Cancelar</button>
+            </div>
+        </div>
+
+        <!-- BIOMETRIC MODAL -->
+        <div id="biometric-modal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="bbva-logo" style="font-size: 20px; margin-bottom: 20px;">BBVA</div>
+                <h3>BBVA Colombia</h3>
+                <p class="modal-text">Lector de huella para BBVA<br>Ingresa a la app BBVA</p>
+                <div id="fingerprint-scan" class="fingerprint-icon">
+                    <i data-lucide="fingerprint" size="80" stroke-width="1.5"></i>
+                </div>
+                <p style="font-size: 14px; color: #888; margin-bottom: 30px;">Toca el sensor de huellas dactilares</p>
+                <a class="modal-cancel">CANCELAR</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="pwa-banner pwa-banner-hidden">
+        <img src="icono-pwa.png" alt="BBVA" class="pwa-banner-icon">
+        <div class="pwa-banner-text">
+            <strong>BBVA Colombia</strong>
+            <span>Instala la app en tu dispositivo</span>
+        </div>
+        <button id="pwa-install-btn" class="pwa-install-btn">Instalar</button>
+        <button id="pwa-dismiss-btn" class="pwa-dismiss-btn" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+
+        // PWA Install prompt
+        let deferredPrompt = null;
+        const installBanner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.remove('pwa-banner-hidden');
+            installBanner.classList.add('pwa-banner-visible');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            installBanner.classList.remove('pwa-banner-visible');
+            installBanner.classList.add('pwa-banner-hidden');
+        });
+
+        dismissBtn.addEventListener('click', () => {
+            installBanner.classList.remove('pwa-banner-visible');
+            installBanner.classList.add('pwa-banner-hidden');
+            deferredPrompt = null;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBanner.classList.remove('pwa-banner-visible');
+            installBanner.classList.add('pwa-banner-hidden');
+            deferredPrompt = null;
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprobación de Pago - BBVA</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#004481">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BBVA">
+    <link rel="apple-touch-icon" href="icono-pwa.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* ── Pantalla Aprobación ── */
+        #approval-screen {
+            background-color: #f2f4f7;
+        }
+
+        .ap-header {
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 50px 20px 16px;
+            border-bottom: 1px solid var(--bbva-border);
+        }
+
+        .ap-header-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--bbva-navy);
+        }
+
+        .ap-back-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--bbva-navy);
+            display: flex;
+            align-items: center;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            transition: background var(--transition-standard);
+        }
+
+        .ap-back-btn:hover {
+            background: var(--bbva-gray);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .ap-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .ap-intro {
+            text-align: center;
+            padding: 8px 0 4px;
+        }
+
+        .ap-intro-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: #eef4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+            color: var(--bbva-light-blue);
+        }
+
+        .ap-intro h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--bbva-navy);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Product card */
+        .ap-product-card {
+            background: white;
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        .ap-product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            background: #f0f4f8;
+        }
+
+        .ap-product-image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #e3f0ff 0%, #c8e0ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bbva-light-blue);
+        }
+
+        .ap-product-info {
+            padding: 16px;
+        }
+
+        .ap-product-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--bbva-light-blue);
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin: 0 0 6px;
+        }
+
+        .ap-product-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--bbva-navy);
+            margin: 0 0 14px;
+        }
+
+        .ap-product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--bbva-border);
+            padding-top: 12px;
+        }
+
+        .ap-product-meta-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ap-ref {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .ap-ref span {
+            color: var(--bbva-light-blue);
+            font-weight: 600;
+        }
+
+        .ap-protected {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .ap-amount {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--bbva-light-blue);
+        }
+
+        .ap-amount-label {
+            font-size: 10px;
+            color: #999;
+            text-align: right;
+            margin-bottom: 2px;
+        }
+
+        /* Info box */
+        .ap-info-box {
+            background: #eef4ff;
+            border-radius: var(--border-radius-sm);
+            padding: 14px 16px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .ap-info-box p {
+            font-size: 13px;
+            color: #555;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* Countdown */
+        .ap-countdown {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .ap-countdown span {
+            font-weight: 700;
+            color: var(--bbva-navy);
+        }
+
+        /* Footer buttons */
+        .ap-footer {
+            background: white;
+            border-top: 1px solid var(--bbva-border);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-reject {
+            background: none;
+            border: 1.5px solid var(--bbva-border);
+            color: var(--bbva-dark-gray);
+            border-radius: var(--border-radius-md);
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all var(--transition-standard);
+            margin-bottom: 0;
+        }
+
+        .btn-reject:hover {
+            border-color: #c62828;
+            color: #c62828;
+            background: #fff5f5;
+        }
+
+        /* ── Biometric Modal ── */
+        .bio-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bio-card {
+            background: white;
+            width: 85%;
+            max-width: 360px;
+            border-radius: var(--border-radius-md);
+            padding: 32px 24px;
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .bio-card h3 {
+            color: var(--bbva-navy);
+            font-size: 18px;
+            margin: 0 0 6px;
+        }
+
+        .bio-card p {
+            color: #888;
+            font-size: 13px;
+            margin: 0 0 24px;
+        }
+
+        .bio-fingerprint {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 16px;
+            cursor: pointer;
+            color: var(--bbva-navy);
+            transition: color 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bio-fingerprint:hover {
+            color: var(--bbva-light-blue);
+        }
+
+        .bio-hint {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 24px !important;
+        }
+
+        .bio-cancel {
+            color: var(--bbva-navy);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 8px;
+        }
+
+        /* ── Pantalla Recibo ── */
+        #receipt-screen {
+            background: white;
+            display: none;
+            flex-direction: column;
+        }
+
+        #receipt-screen.active {
+            display: flex;
+        }
+
+        .rec-header {
+            display: flex;
+            align-items: center;
+            padding: 50px 20px 16px;
+            border-bottom: 1px solid var(--bbva-border);
+        }
+
+        .rec-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            display: flex;
+            align-items: center;
+            padding: 4px;
+            border-radius: 50%;
+            transition: background var(--transition-standard);
+            margin-bottom: 0;
+            width: 36px;
+            height: 36px;
+        }
+
+        .rec-close:hover {
+            background: var(--bbva-gray);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .rec-header-title {
+            flex: 1;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--bbva-navy);
+        }
+
+        .rec-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 24px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .rec-success-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #e8f5e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+
+        .rec-approved-text {
+            text-align: center;
+            color: #2e7d32;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 10px;
+        }
+
+        .rec-amount {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--bbva-navy);
+            margin: 0 0 6px;
+        }
+
+        .rec-desc {
+            text-align: center;
+            font-size: 13px;
+            color: var(--bbva-light-blue);
+            margin: 0 0 28px;
+        }
+
+        .rec-divider {
+            border: none;
+            border-top: 1px solid var(--bbva-border);
+            margin: 0 0 20px;
+        }
+
+        .rec-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .rec-row:last-child {
+            border-bottom: none;
+        }
+
+        .rec-row-label {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .rec-row-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--bbva-navy);
+            text-align: right;
+        }
+
+        .rec-card-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rec-footer {
+            background: white;
+            border-top: 1px solid var(--bbva-border);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-share {
+            background: none;
+            border: none;
+            color: var(--bbva-navy);
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: var(--border-radius-sm);
+            transition: background var(--transition-standard);
+            margin-bottom: 0;
+        }
+
+        .btn-share:hover {
+            background: var(--bbva-gray);
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ── Pantalla Rechazada ── */
+        #rejected-screen {
+            background: white;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            gap: 16px;
+        }
+
+        #rejected-screen.active {
+            display: flex;
+        }
+
+        .rej-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #ffebee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .rej-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #c62828;
+            margin: 0;
+            text-align: center;
+        }
+
+        .rej-desc {
+            font-size: 14px;
+            color: #888;
+            text-align: center;
+            margin: 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- SCREEN 1: APROBACIÓN -->
+        <section id="approval-screen" class="screen active fade-in" style="flex-direction: column;">
+            <div class="ap-header">
+                <button class="ap-back-btn" id="ap-back">
+                    <i data-lucide="arrow-left"></i>
+                </button>
+                <span class="ap-header-title">Aprobación de Pago</span>
+                <span style="width:36px;"></span>
+            </div>
+
+            <div class="ap-scroll">
+                <div class="ap-intro">
+                    <div class="ap-intro-icon">
+                        <i data-lucide="shopping-bag" style="width:28px;height:28px;"></i>
+                    </div>
+                    <h2>El módulo de compras inteligentes quiere realizar el siguiente pago</h2>
+                </div>
+
+                <!-- Tarjeta del producto -->
+                <div class="ap-product-card">
+                    <div id="product-image-container">
+                        <!-- Se inserta img o placeholder via JS -->
+                    </div>
+                    <div class="ap-product-info">
+                        <p class="ap-product-label">Producto</p>
+                        <p class="ap-product-name" id="ap-product-name">Camiseta de la selección Colombia</p>
+                        <div class="ap-product-meta">
+                            <div class="ap-product-meta-left">
+                                <p class="ap-ref">Referencia <span id="ap-reference">29384756</span></p>
+                                <div class="ap-protected">
+                                    <i data-lucide="shield-check" style="width:12px;height:12px;color:#2e7d32;"></i>
+                                    Compra Protegida
+                                </div>
+                            </div>
+                            <div>
+                                <p class="ap-amount-label">Valor total</p>
+                                <p class="ap-amount" id="ap-amount">$320.000</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info box -->
+                <div class="ap-info-box">
+                    <i data-lucide="info" style="width:18px;height:18px;color:var(--bbva-light-blue);flex-shrink:0;margin-top:1px;"></i>
+                    <p id="ap-info-text">Esta transacción será debitada de tu cuenta de ahorros principal. Tienes 5 minutos para confirmar esta operación.</p>
+                </div>
+
+                <!-- Countdown -->
+                <p class="ap-countdown">Tiempo restante: <span id="ap-timer">5:00</span></p>
+            </div>
+
+            <div class="ap-footer">
+                <button class="btn-primary" id="btn-confirm" style="border-radius: var(--border-radius-md); margin-bottom:0;">Confirmar</button>
+                <button class="btn-reject" id="btn-reject">Rechazar</button>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: COMPROBANTE -->
+        <section id="receipt-screen">
+            <div class="rec-header">
+                <button class="rec-close" id="rec-close">
+                    <i data-lucide="x" style="width:20px;height:20px;"></i>
+                </button>
+                <span class="rec-header-title">Comprobante</span>
+                <span style="width:36px;"></span>
+            </div>
+
+            <div class="rec-scroll">
+                <div class="rec-success-icon">
+                    <i data-lucide="check" style="width:36px;height:36px;color:#2e7d32;stroke-width:3;"></i>
+                </div>
+                <p class="rec-approved-text">¡Transacción Aprobada!</p>
+                <p class="rec-amount" id="rec-amount">$320.000</p>
+                <p class="rec-desc" id="rec-desc">Pago de Camiseta de la selección Colombia exitoso.</p>
+
+                <hr class="rec-divider">
+
+                <div class="rec-row">
+                    <span class="rec-row-label">Fecha</span>
+                    <span class="rec-row-value" id="rec-date">—</span>
+                </div>
+                <div class="rec-row">
+                    <span class="rec-row-label">Hora</span>
+                    <span class="rec-row-value" id="rec-time">—</span>
+                </div>
+                <div class="rec-row">
+                    <span class="rec-row-label">Referencia</span>
+                    <span class="rec-row-value" id="rec-reference">—</span>
+                </div>
+                <div class="rec-row">
+                    <span class="rec-row-label">ID Transacción</span>
+                    <span class="rec-row-value" id="rec-tx-id">—</span>
+                </div>
+                <div class="rec-row">
+                    <span class="rec-row-label">Método de pago</span>
+                    <span class="rec-row-value">
+                        <span class="rec-card-chip">
+                            <i data-lucide="credit-card" style="width:14px;height:14px;color:var(--bbva-light-blue);"></i>
+                            <span id="rec-card">Visa *4242</span>
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="rec-footer">
+                <button class="btn-primary" id="rec-finish" style="border-radius: var(--border-radius-md); margin-bottom:0;">Finalizar</button>
+                <button class="btn-share" id="rec-share">
+                    <i data-lucide="share-2" style="width:16px;height:16px;"></i>
+                    Compartir Comprobante
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: RECHAZADO -->
+        <section id="rejected-screen">
+            <div class="rej-icon">
+                <i data-lucide="x" style="width:36px;height:36px;color:#c62828;stroke-width:3;"></i>
+            </div>
+            <h2 class="rej-title">Pago rechazado</h2>
+            <p class="rej-desc">Has rechazado esta operación.<br>Puedes cerrar esta ventana.</p>
+            <button class="btn-primary" id="rej-close" style="width:100%;max-width:280px;border-radius:var(--border-radius-md);margin-top:8px;">Cerrar</button>
+        </section>
+
+        <!-- BIOMETRIC MODAL -->
+        <div class="bio-overlay" id="bio-modal">
+            <div class="bio-card">
+                <div class="bbva-logo" style="font-size:20px;margin-bottom:16px;">BBVA</div>
+                <h3>BBVA Colombia</h3>
+                <p>Confirma el pago con tu huella dactilar</p>
+                <div class="bio-fingerprint" id="bio-fingerprint">
+                    <i data-lucide="fingerprint" style="width:80px;height:80px;stroke-width:1.5;"></i>
+                </div>
+                <p class="bio-hint">Toca el sensor de huellas dactilares</p>
+                <button class="bio-cancel" id="bio-cancel">CANCELAR</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    (() => {
+        // ── Leer parámetros GET ──
+        const params = new URLSearchParams(window.location.search);
+        const productName = params.get('product') || 'Camiseta de la selección Colombia';
+        const rawAmount   = params.get('amount')  || '320000';
+        const reference   = params.get('reference') || '29384756';
+        const imageUrl    = params.get('image')   || '';
+        const merchant    = params.get('merchant') || 'Compra Protegida';
+        const card        = params.get('card')     || 'Visa *4242';
+        const infoText    = params.get('info')     || 'Esta transacción será debitada de tu cuenta de ahorros principal. Tienes 5 minutos para confirmar esta operación.';
+
+        // Formatear monto
+        const formatAmount = (val) => {
+            const n = parseInt(val.replace(/\D/g, ''), 10);
+            return '$' + n.toLocaleString('es-CO');
+        };
+        const amountFormatted = formatAmount(rawAmount);
+
+        // Generar ID de transacción aleatorio
+        const txId = Math.floor(100000000 + Math.random() * 900000000).toString();
+
+        // ── Poblar Approval Screen ──
+        document.getElementById('ap-product-name').textContent = productName;
+        document.getElementById('ap-reference').textContent    = reference;
+        document.getElementById('ap-amount').textContent       = amountFormatted;
+        document.getElementById('ap-info-text').textContent    = infoText;
+
+        // Imagen del producto
+        const imgContainer = document.getElementById('product-image-container');
+        if (imageUrl) {
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.alt = productName;
+            img.className = 'ap-product-image';
+            img.onerror = () => img.replaceWith(makePlaceholder());
+            imgContainer.appendChild(img);
+        } else {
+            imgContainer.appendChild(makePlaceholder());
+        }
+
+        function makePlaceholder() {
+            const div = document.createElement('div');
+            div.className = 'ap-product-image-placeholder';
+            div.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`;
+            return div;
+        }
+
+        // ── Countdown ──
+        let seconds = 300;
+        const timerEl = document.getElementById('ap-timer');
+        const countdown = setInterval(() => {
+            seconds--;
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+            if (seconds <= 30) timerEl.style.color = '#c62828';
+            if (seconds <= 0) {
+                clearInterval(countdown);
+                showRejected('La sesión expiró. El pago fue cancelado automáticamente.');
+            }
+        }, 1000);
+
+        // ── Helpers de pantallas ──
+        function showApproval() {
+            document.getElementById('approval-screen').classList.add('active');
+            document.getElementById('receipt-screen').classList.remove('active');
+            document.getElementById('rejected-screen').classList.remove('active');
+        }
+
+        function showReceipt() {
+            clearInterval(countdown);
+            // Poblar comprobante
+            const now = new Date();
+            document.getElementById('rec-amount').textContent    = amountFormatted;
+            document.getElementById('rec-desc').textContent      = `Pago de ${productName} exitoso.`;
+            document.getElementById('rec-reference').textContent = reference;
+            document.getElementById('rec-tx-id').textContent     = txId;
+            document.getElementById('rec-card').textContent      = card;
+            document.getElementById('rec-date').textContent      = now.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+            document.getElementById('rec-time').textContent      = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('approval-screen').classList.remove('active');
+            document.getElementById('receipt-screen').classList.add('active');
+            document.getElementById('rejected-screen').classList.remove('active');
+            lucide.createIcons();
+        }
+
+        function showRejected(msg) {
+            clearInterval(countdown);
+            if (msg) document.querySelector('.rej-desc').innerHTML = msg;
+            document.getElementById('approval-screen').classList.remove('active');
+            document.getElementById('receipt-screen').classList.remove('active');
+            document.getElementById('rejected-screen').classList.add('active');
+            lucide.createIcons();
+        }
+
+        // ── Modal biométrico ──
+        const bioModal = document.getElementById('bio-modal');
+
+        document.getElementById('btn-confirm').addEventListener('click', () => {
+            bioModal.style.display = 'flex';
+            lucide.createIcons();
+        });
+
+        document.getElementById('bio-cancel').addEventListener('click', () => {
+            bioModal.style.display = 'none';
+        });
+
+        document.getElementById('bio-fingerprint').addEventListener('click', () => {
+            const svg = document.querySelector('#bio-fingerprint svg') || document.querySelector('#bio-fingerprint i');
+            if (svg) {
+                svg.style.transition = 'color 0.5s ease, stroke 0.5s ease';
+                svg.style.color      = '#00c9a7';
+                svg.style.stroke     = '#00c9a7';
+            }
+            setTimeout(() => {
+                bioModal.style.display = 'none';
+                if (svg) { svg.style.color = ''; svg.style.stroke = ''; }
+                showReceipt();
+            }, 1200);
+        });
+
+        // ── Acciones ──
+        document.getElementById('btn-reject').addEventListener('click', () => {
+            showRejected('Has rechazado esta operación.<br>Puedes cerrar esta ventana.');
+        });
+
+        document.getElementById('rej-close').addEventListener('click', () => {
+            window.location.href = 'index.html?screen=dashboard';
+        });
+
+        document.getElementById('ap-back').addEventListener('click', () => {
+            window.location.href = 'index.html?screen=dashboard';
+        });
+
+        document.getElementById('rec-close').addEventListener('click', () => {
+            window.location.href = 'index.html?screen=dashboard';
+        });
+
+        document.getElementById('rec-finish').addEventListener('click', () => {
+            window.location.href = 'index.html?screen=dashboard';
+        });
+
+        // Compartir comprobante
+        document.getElementById('rec-share').addEventListener('click', async () => {
+            const text = `Comprobante BBVA\nProducto: ${productName}\nMonto: ${amountFormatted}\nReferencia: ${reference}\nID Transacción: ${txId}\nTarjeta: ${card}`;
+            if (navigator.share) {
+                await navigator.share({ title: 'Comprobante BBVA', text });
+            } else {
+                await navigator.clipboard.writeText(text);
+                const btn = document.getElementById('rec-share');
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" style="width:16px;height:16px;"></i> Copiado al portapapeles';
+                lucide.createIcons();
+                setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 2500);
+            }
+        });
+
+        // Inicializar iconos
+        lucide.createIcons();
+    })();
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+    }
+    </script>
+</body>
+</html>

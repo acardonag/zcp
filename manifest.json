@@ -1,0 +1,27 @@
+{
+  "name": "BBVA Colombia",
+  "short_name": "BBVA",
+  "description": "Gestiona tus finanzas de forma segura con BBVA Colombia",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#004481",
+  "theme_color": "#004481",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icono-pwa.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icono-pwa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["finance", "utilities"]
+}
