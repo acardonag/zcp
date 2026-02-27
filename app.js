@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── State ──
     const state = {
-        userName: localStorage.getItem('bbva_user') || 'Augusto',
+        userName: localStorage.getItem('bbva_user') || '',
         isLoggedIn: false
     };
 
@@ -43,8 +43,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Welcome Screen ──
-    document.getElementById('to-register')?.addEventListener('click', () => showScreen('register-screen'));
-    document.getElementById('to-login')?.addEventListener('click', () => showScreen('login-screen'));
+    document.getElementById('to-register')?.addEventListener('click', () => {
+        const hint = document.getElementById('register-hint');
+        if (hint) hint.style.display = 'none';
+        showScreen('register-screen');
+    });
+    document.getElementById('to-login')?.addEventListener('click', () => {
+        if (!localStorage.getItem('bbva_user')) {
+            // No hay usuario registrado, invitar a registrarse
+            const toast = document.getElementById('reg-toast');
+            const toastMsg = toast.querySelector('span') || toast;
+            // Mostrar pantalla de registro con un mensaje
+            showScreen('register-screen');
+            const hint = document.getElementById('register-hint');
+            if (hint) hint.style.display = 'block';
+            return;
+        }
+        showScreen('login-screen');
+    });
 
     // Registration Screen
     document.getElementById('do-register')?.addEventListener('click', () => {
