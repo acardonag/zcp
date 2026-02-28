@@ -1118,6 +1118,175 @@ button:focus-visible {
   color: #fff;
 }
 
+/* ── Pagos Inteligentes Welcome Modal ── */
+.pi-welcome-card {
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    overflow: hidden;
+    animation: slideUpModal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+}
+
+@keyframes slideUpModal {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+}
+
+.pi-welcome-header {
+    background: linear-gradient(135deg, #004481 0%, #1173d4 60%, #00c9a7 100%);
+    padding: 32px 24px 28px;
+    position: relative;
+    overflow: hidden;
+}
+
+.pi-welcome-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+}
+
+.pi-welcome-header::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+}
+
+.pi-welcome-logo {
+    font-size: 18px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+}
+
+.pi-welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    backdrop-filter: blur(4px);
+}
+
+.pi-welcome-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    margin: 0 0 10px;
+}
+
+.pi-welcome-subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.82);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.pi-welcome-features {
+    padding: 20px 24px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.pi-welcome-feat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pi-welcome-feat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #f0f4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pi-welcome-feat-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 2px;
+}
+
+.pi-welcome-feat-desc {
+    font-size: 12px;
+    color: #888;
+    margin: 0;
+}
+
+.pi-welcome-actions {
+    padding: 20px 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pi-welcome-cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #004481, #1173d4);
+    color: #fff;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 4px 16px rgba(0,68,129,0.35);
+}
+
+.pi-welcome-cta-btn:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+.pi-welcome-later-btn {
+    background: #f2f4f7;
+    color: var(--bbva-navy);
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.pi-welcome-later-btn:hover { background: #e4e8f0; }
+
+.pi-welcome-never-btn {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px;
+    text-decoration: underline;
+}
+
 /* ── PWA Install Banner ── */
 .pwa-banner {
     position: fixed;

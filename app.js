@@ -332,6 +332,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loginStep = 'cedula';
             loginUserData = null;
             showScreen('dashboard-screen');
+            // Mostrar modal de bienvenida PI si aplica
+            showPIWelcomeModal();
         }
     });
 
@@ -360,6 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show logical success
             updatePromoBanner();
             showScreen('dashboard-screen');
+            showPIWelcomeModal();
             if (icon) {
                 icon.style.color = '';
                 icon.style.stroke = '';
@@ -445,4 +448,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dark mode toggle dentro de Pagos Inteligentes
     document.getElementById('pi-dark-mode')?.addEventListener('click', () => {
         document.getElementById('app').classList.toggle('dark-mode');
-    });});
+    });
+
+    // ── PI Welcome Modal ──
+    function showPIWelcomeModal() {
+        // No mostrar si pagos inteligentes ya están activos
+        if (localStorage.getItem('bbva_pagos_inteligentes') === 'true') return;
+        // No mostrar si el usuario eligió no volver a ver
+        if (localStorage.getItem('bbva_pi_modal_dismissed') === '1') return;
+
+        const modal = document.getElementById('pi-welcome-modal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        if (window.lucide) window.lucide.createIcons();
+
+        document.getElementById('pi-welcome-cta')?.addEventListener('click', () => {
+            modal.style.display = 'none';
+            showScreen('pagos-inteligentes-screen');
+        }, { once: true });
+
+        document.getElementById('pi-welcome-later')?.addEventListener('click', () => {
+            modal.style.display = 'none';
+        }, { once: true });
+
+        document.getElementById('pi-welcome-never')?.addEventListener('click', () => {
+            localStorage.setItem('bbva_pi_modal_dismissed', '1');
+            modal.style.display = 'none';
+        }, { once: true });
+    }
+
+});
