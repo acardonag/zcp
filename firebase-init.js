@@ -128,10 +128,14 @@ async function initPushNotifications(cedula) {
             return null;
         }
 
-        const swReg = await navigator.serviceWorker.ready;
+        // Registrar sw.js unificado (contiene FCM + cache)
+        const swReg = await navigator.serviceWorker.register('/zcp/sw.js', { scope: '/zcp/' });
+        await navigator.serviceWorker.ready;
+        console.log('[FCM] ✅ SW registrado:', swReg.scope);
+
         const token = await getToken(messaging, {
-            vapidKey:                    VAPID_KEY,
-            serviceWorkerRegistration:   swReg
+            vapidKey:                  VAPID_KEY,
+            serviceWorkerRegistration: swReg
         });
 
         if (!token) {
