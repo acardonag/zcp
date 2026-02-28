@@ -39,6 +39,23 @@ async function checkUserExists(cedula) {
     }
 }
 
+// Obtiene los datos de un usuario por cédula
+async function getUserByCedula(cedula) {
+    console.log('[getUserByCedula] Buscando usuario:', cedula);
+    try {
+        const snapshot = await getDoc(doc(db, 'users', cedula));
+        if (snapshot.exists()) {
+            console.log('[getUserByCedula] Usuario encontrado:', snapshot.data().name);
+            return snapshot.data();
+        }
+        console.warn('[getUserByCedula] No existe usuario con cédula:', cedula);
+        return null;
+    } catch (e) {
+        console.error('[getUserByCedula] Error:', e.code, e.message);
+        throw e;
+    }
+}
+
 // Actualiza solo el campo pagosInteligentes en Firestore
 async function updatePagosInteligentes(isActive) {
     const cedula = localStorage.getItem('bbva_user_id');
@@ -93,6 +110,7 @@ async function registerUserInFirestore(name, cedula, email) {
 window.firebaseDB                  = db;
 window.registerUserInFirestore     = registerUserInFirestore;
 window.checkUserExists             = checkUserExists;
+window.getUserByCedula             = getUserByCedula;
 window.updatePagosInteligentes     = updatePagosInteligentes;
 window.firestoreDoc                = doc;
 window.firestoreSetDoc             = setDoc;

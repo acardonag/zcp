@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bbva-app-v3';
+const CACHE_NAME = 'bbva-app-v4';
 const ASSETS = [
     './',
     './index.html',

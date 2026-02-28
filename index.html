@@ -86,16 +86,32 @@
                 </button>
             </div>
             <div class="login-content">
-                <h2 id="login-greeting">Hola, <span id="user-display">Invitado</span></h2>
-                <div class="input-container" style="margin-top: 30px;">
-                    <span class="input-label">Ingresa tu contraseña</span>
-                    <input type="password" id="login-password" class="input-field" placeholder="Contraseña">
-                    <div id="login-error" class="login-error login-error-hidden">
+                <h2>Hola, <span id="user-display">bienvenido</span></h2>
+                <p id="login-subtitle" style="font-size:14px;color:#666;margin-top:4px;">Ingresa tu número de documento</p>
+
+                <!-- Campo cédula -->
+                <div class="input-container" style="margin-top: 24px;">
+                    <span class="input-label">Número de cédula</span>
+                    <input type="number" id="login-cedula" class="input-field" placeholder="Cédula de ciudadanía">
+                    <div id="login-cedula-error" class="login-error login-error-hidden">
                         <i data-lucide="alert-circle" style="width:15px;height:15px;flex-shrink:0;"></i>
-                        <span>Contraseña incorrecta. Inténtalo de nuevo.</span>
+                        <span id="login-cedula-error-msg">No encontramos esta cédula. ¿Estás registrado?</span>
                     </div>
                 </div>
-                <button id="do-login" class="btn-primary" style="margin-top: 20px;">Ingresar</button>
+
+                <!-- Campo contraseña (oculto hasta verificar cédula) -->
+                <div id="login-password-section" style="display:none;">
+                    <div class="input-container" style="margin-top: 16px;">
+                        <span class="input-label">Contraseña</span>
+                        <input type="password" id="login-password" class="input-field" placeholder="Contraseña">
+                        <div id="login-error" class="login-error login-error-hidden">
+                            <i data-lucide="alert-circle" style="width:15px;height:15px;flex-shrink:0;"></i>
+                            <span>Contraseña incorrecta. Inténtalo de nuevo.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="do-login" class="btn-primary" style="margin-top: 20px;">Continuar</button>
                 <button id="show-biometrics" class="biometric-btn">
                     <i data-lucide="fingerprint"></i>
                     Ingresar con biometría

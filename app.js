@@ -49,16 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('register-screen');
     });
     document.getElementById('to-login')?.addEventListener('click', () => {
-        if (!localStorage.getItem('bbva_user')) {
-            // No hay usuario registrado, invitar a registrarse
-            const toast = document.getElementById('reg-toast');
-            const toastMsg = toast.querySelector('span') || toast;
-            // Mostrar pantalla de registro con un mensaje
-            showScreen('register-screen');
-            const hint = document.getElementById('register-hint');
-            if (hint) hint.style.display = 'block';
-            return;
-        }
         showScreen('login-screen');
     });
 
@@ -174,10 +164,51 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('reg-to-login')?.addEventListener('click', () => showScreen('login-screen'));
 
     // Login Screen
-    document.getElementById('login-back')?.addEventListener('click', () => showScreen('welcome-screen'));
-    document.getElementById('login-close')?.addEventListener('click', () => showScreen('welcome-screen'));
-    
+    document.getElementById('login-back')?.addEventListener('click', () => {
+        // Resetear estado del login al volver
+        loginStep = 'cedula';
+        document.getElementById('login-cedula').value = '';
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-password-section').style.display = 'none';
+        document.getElementById('user-display').textContent = 'bienvenido';
+        document.getElementById('login-subtitle').textContent = 'Ingresa tu número de documento';
+        document.getElementById('do-login').textContent = 'Continuar';
+        clearLoginError();
+        showScreen('welcome-screen');
+    });
+    document.getElementById('login-close')?.addEventListener('click', () => {
+        loginStep = 'cedula';
+        document.getElementById('login-cedula').value = '';
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-password-section').style.display = 'none';
+        document.getElementById('user-display').textContent = 'bienvenido';
+        document.getElementById('login-subtitle').textContent = 'Ingresa tu número de documento';
+        document.getElementById('do-login').textContent = 'Continuar';
+        clearLoginError();
+        showScreen('welcome-screen');
+    });
+
     const DEFAULT_PASSWORD = '1234';
+    let loginStep = 'cedula'; // 'cedula' | 'password'
+    let loginUserData = null;  // datos del usuario encontrado en Firestore
+
+    const showLoginCedulaError = (msg) => {
+        const input = document.getElementById('login-cedula');
+        const err   = document.getElementById('login-cedula-error');
+        const errMsg = document.getElementById('login-cedula-error-msg');
+        input.classList.add('input-error');
+        if (msg) errMsg.textContent = msg;
+        err.classList.remove('login-error-hidden');
+        err.classList.add('login-error-visible');
+        if (window.lucide) window.lucide.createIcons();
+    };
+
+    const clearCedulaError = () => {
+        document.getElementById('login-cedula')?.classList.remove('input-error');
+        const err = document.getElementById('login-cedula-error');
+        err?.classList.remove('login-error-visible');
+        err?.classList.add('login-error-hidden');
+    };
 
     const showLoginError = () => {
         const pwInput = document.getElementById('login-password');
@@ -191,24 +222,84 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const clearLoginError = () => {
-        const pwInput = document.getElementById('login-password');
+        document.getElementById('login-password')?.classList.remove('input-error');
         const err = document.getElementById('login-error');
-        pwInput?.classList.remove('input-error');
         err?.classList.remove('login-error-visible');
         err?.classList.add('login-error-hidden');
     };
 
+    document.getElementById('login-cedula')?.addEventListener('input', clearCedulaError);
     document.getElementById('login-password')?.addEventListener('input', clearLoginError);
 
-    document.getElementById('do-login')?.addEventListener('click', () => {
-        const pw = document.getElementById('login-password')?.value;
-        if (pw !== DEFAULT_PASSWORD) {
-            showLoginError();
-            return;
+    document.getElementById('do-login')?.addEventListener('click', async () => {
+        const btn = document.getElementById('do-login');
+
+        if (loginStep === 'cedula') {
+            const cedula = document.getElementById('login-cedula')?.value.trim();
+            if (!cedula) {
+                showLoginCedulaError('Ingresa tu número de cédula.');
+                return;
+            }
+
+            btn.disabled    = true;
+            btn.textContent = 'Buscando...';
+            clearCedulaError();
+
+            try {
+                if (!window.firebaseReady) {
+                    await new Promise((resolve, reject) => {
+                        const t = setTimeout(() => reject(new Error('Firebase timeout')), 10000);
+                        window.addEventListener('firebase-ready', () => { clearTimeout(t); resolve(); }, { once: true });
+                    });
+                }
+
+                console.log('[login] Buscando cédula:', cedula);
+                loginUserData = await window.getUserByCedula(cedula);
+
+                if (!loginUserData) {
+                    showLoginCedulaError('No encontramos esta cédula. ¿Estás registrado?');
+                    btn.disabled    = false;
+                    btn.textContent = 'Continuar';
+                    return;
+                }
+
+                // Cédula válida → mostrar campo de contraseña
+                console.log('[login] Usuario encontrado:', loginUserData.name);
+                document.getElementById('user-display').textContent = loginUserData.name.split(' ')[0];
+                document.getElementById('login-subtitle').textContent = 'Ingresa tu contraseña para continuar';
+                document.getElementById('login-password-section').style.display = 'block';
+                document.getElementById('do-login').textContent = 'Ingresar';
+                document.getElementById('login-password').focus();
+                loginStep = 'password';
+
+            } catch (err) {
+                console.error('[login] Error buscando cédula:', err);
+                showLoginCedulaError('Error de conexión. Inténtalo de nuevo.');
+            }
+
+            btn.disabled    = false;
+            btn.textContent = loginStep === 'password' ? 'Ingresar' : 'Continuar';
+
+        } else {
+            // Paso 2: validar contraseña
+            const pw = document.getElementById('login-password')?.value;
+            console.log('[login] Validando contraseña para:', loginUserData?.name);
+            if (pw !== DEFAULT_PASSWORD) {
+                showLoginError();
+                return;
+            }
+            // Login exitoso
+            state.userName = loginUserData.name;
+            localStorage.setItem('bbva_user',    loginUserData.name);
+            localStorage.setItem('bbva_user_id', loginUserData.cedula);
+            localStorage.setItem('bbva_pagos_inteligentes', loginUserData.pagosInteligentes ? 'true' : 'false');
+            updateUI();
+            clearLoginError();
+            updatePromoBanner();
+            loginStep = 'cedula';
+            loginUserData = null;
+            showScreen('dashboard-screen');
         }
-        clearLoginError();
-        updatePromoBanner();
-        showScreen('dashboard-screen');
     });
 
     // Biometrics Simulation
