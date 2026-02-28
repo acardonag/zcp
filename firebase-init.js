@@ -27,16 +27,29 @@ function generateDeviceId() {
 
 // Verifica si ya existe un usuario con esa cédula
 async function checkUserExists(cedula) {
-    const snapshot = await getDoc(doc(db, 'users', cedula));
-    return snapshot.exists();
+    console.log('[checkUserExists] Buscando cédula en Firestore:', cedula);
+    try {
+        const snapshot = await getDoc(doc(db, 'users', cedula));
+        const exists = snapshot.exists();
+        console.log('[checkUserExists] ¿Existe?', exists, '| Datos:', exists ? snapshot.data() : 'ninguno');
+        return exists;
+    } catch (e) {
+        console.error('[checkUserExists] Error al consultar Firestore:', e.code, e.message);
+        throw e;
+    }
 }
 
 // Actualiza solo el campo pagosInteligentes en Firestore
 async function updatePagosInteligentes(isActive) {
     const cedula = localStorage.getItem('bbva_user_id');
-    if (!cedula) return;
+    console.log('[updatePagosInteligentes] cédula:', cedula, '| isActive:', isActive);
+    if (!cedula) {
+        console.warn('[updatePagosInteligentes] No hay cédula en localStorage. Abortando.');
+        return;
+    }
     try {
         const { updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        console.log('[updatePagosInteligentes] Ejecutando updateDoc en users/' + cedula);
         await updateDoc(doc(db, 'users', cedula), { pagosInteligentes: isActive });
         console.log('✅ pagosInteligentes actualizado en Firestore:', isActive);
     } catch (e) {

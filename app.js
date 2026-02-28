@@ -99,7 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Verificar si la cédula ya está registrada
+            console.log('[registro] Verificando si cédula ya existe:', cedula);
+            console.log('[registro] window.checkUserExists disponible:', typeof window.checkUserExists);
             const yaExiste = await window.checkUserExists(cedula);
+            console.log('[registro] Resultado checkUserExists:', yaExiste);
             if (yaExiste) {
                 toast.style.background = '#FEF9C3';
                 toast.style.color      = '#854D0E';
@@ -287,11 +290,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guardar configuración
     document.getElementById('pi-save')?.addEventListener('click', async () => {
         const isActive = piToggle?.checked ?? false;
+        console.log('[pi-save] Guardando configuración. isActive:', isActive);
+        console.log('[pi-save] firebaseReady:', window.firebaseReady, '| updatePagosInteligentes:', typeof window.updatePagosInteligentes);
+        console.log('[pi-save] cédula en localStorage:', localStorage.getItem('bbva_user_id'));
         localStorage.setItem(PI_KEY, isActive);
 
         // Sincronizar con Firestore si Firebase está listo
         if (window.firebaseReady && window.updatePagosInteligentes) {
             await window.updatePagosInteligentes(isActive);
+        } else {
+            console.warn('[pi-save] Firebase no disponible, solo guardado en localStorage.');
         }
 
         const msg = isActive
