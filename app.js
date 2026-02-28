@@ -86,13 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'Guardando...';
 
         try {
-            // Esperar a Firebase si aún no está listo
+            // Esperar a Firebase con timeout de 10 segundos
             if (!window.firebaseReady) {
-                await new Promise(resolve =>
-                    window.addEventListener('firebase-ready', resolve, { once: true })
-                );
+                console.log('⏳ Esperando Firebase...');
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Firebase no cargó a tiempo')), 10000);
+                    window.addEventListener('firebase-ready', () => {
+                        clearTimeout(timeout);
+                        resolve();
+                    }, { once: true });
+                });
             }
 
+            console.log('🚀 Firebase listo, registrando usuario...');
             await window.registerUserInFirestore(name, cedula, email);
 
             state.userName = name;
@@ -115,12 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1800);
 
         } catch (err) {
-            console.error('Error Firestore:', err);
+            console.error('❌ Error al registrar:', err);
+
+            const msg = err.code === 'permission-denied'
+                ? 'Sin permisos. Verifica las reglas de Firestore.'
+                : err.message || 'Error al guardar. Intenta de nuevo.';
 
             // Toast error
             toast.style.background = '#fee2e2';
             toast.style.color      = '#991b1b';
-            toast.querySelector('span').textContent = 'Error al guardar. Intenta de nuevo.';
+            toast.querySelector('span').textContent = msg;
             toast.classList.remove('pi-toast-hidden');
             toast.classList.add('pi-toast-visible');
             if (window.lucide) window.lucide.createIcons();
@@ -130,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 toast.classList.add('pi-toast-hidden');
                 toast.style.background = '';
                 toast.style.color      = '';
-            }, 3000);
+            }, 4000);
 
             btn.disabled    = false;
             btn.textContent = 'Crear cuenta →';
