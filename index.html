@@ -89,17 +89,19 @@
                 <h2>Hola, <span id="user-display">bienvenido</span></h2>
                 <p id="login-subtitle" style="font-size:14px;color:#666;margin-top:4px;">Ingresa tu número de documento</p>
 
-                <!-- Campo cédula -->
-                <div class="input-container" style="margin-top: 24px;">
-                    <span class="input-label">Número de cédula</span>
-                    <input type="number" id="login-cedula" class="input-field" placeholder="Cédula de ciudadanía">
-                    <div id="login-cedula-error" class="login-error login-error-hidden">
-                        <i data-lucide="alert-circle" style="width:15px;height:15px;flex-shrink:0;"></i>
-                        <span id="login-cedula-error-msg">No encontramos esta cédula. ¿Estás registrado?</span>
+                <!-- Campo cédula (se oculta si hay usuario en local) -->
+                <div id="login-cedula-section" style="margin-top: 24px;">
+                    <div class="input-container">
+                        <span class="input-label">Número de cédula</span>
+                        <input type="number" id="login-cedula" class="input-field" placeholder="Cédula de ciudadanía">
+                        <div id="login-cedula-error" class="login-error login-error-hidden">
+                            <i data-lucide="alert-circle" style="width:15px;height:15px;flex-shrink:0;"></i>
+                            <span id="login-cedula-error-msg">No encontramos esta cédula. ¿Estás registrado?</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Campo contraseña (oculto hasta verificar cédula) -->
+                <!-- Campo contraseña (oculto hasta verificar cédula o si hay usuario local) -->
                 <div id="login-password-section" style="display:none;">
                     <div class="input-container" style="margin-top: 16px;">
                         <span class="input-label">Contraseña</span>
@@ -112,14 +114,18 @@
                 </div>
 
                 <button id="do-login" class="btn-primary" style="margin-top: 20px;">Continuar</button>
-                <button id="show-biometrics" class="biometric-btn">
+
+                <!-- Solo visible en paso de contraseña -->
+                <button id="show-biometrics" class="biometric-btn" style="display:none;">
                     <i data-lucide="fingerprint"></i>
                     Ingresar con biometría
                 </button>
+
+                <!-- Solo visible en paso de contraseña -->
+                <button id="login-not-you" style="display:none; background:none; border:none; color:#888; font-size:13px; cursor:pointer; margin-top:8px; text-decoration:underline;">No eres tú, ingresar con otro usuario</button>
+
                 <div style="text-align: center; margin-top: 30px;">
-                    <a href="#"
-                        style="color: var(--bbva-navy); font-size: 14px; text-decoration: none; font-weight: 600;">¿Olvidaste
-                        tu contraseña?</a>
+                    <a href="#" style="color: var(--bbva-navy); font-size: 14px; text-decoration: none; font-weight: 600;">¿Olvidaste tu contraseña?</a>
                 </div>
             </div>
         </section>

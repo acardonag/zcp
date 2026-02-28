@@ -49,8 +49,34 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('register-screen');
     });
     document.getElementById('to-login')?.addEventListener('click', () => {
+        initLoginScreen();
         showScreen('login-screen');
     });
+
+    // Prepara la pantalla de login según si hay usuario guardado localmente
+    function initLoginScreen() {
+        const savedName = localStorage.getItem('bbva_user');
+        const savedId   = localStorage.getItem('bbva_user_id');
+
+        if (savedName && savedId) {
+            // Usuario conocido → saltar directamente al paso de contraseña
+            console.log('[initLoginScreen] Usuario local encontrado:', savedName);
+            loginStep    = 'password';
+            loginUserData = { name: savedName, cedula: savedId,
+                              pagosInteligentes: localStorage.getItem('bbva_pagos_inteligentes') === 'true' };
+
+            document.getElementById('user-display').textContent    = savedName.split(' ')[0];
+            document.getElementById('login-subtitle').textContent  = 'Ingresa tu contraseña para continuar';
+            document.getElementById('login-cedula-section').style.display  = 'none';
+            document.getElementById('login-password-section').style.display = 'block';
+            document.getElementById('login-not-you').style.display          = 'inline-block';
+            document.getElementById('show-biometrics').style.display        = 'flex';
+            document.getElementById('do-login').textContent                 = 'Ingresar';
+        } else {
+            // Sin usuario guardado → pedir cédula
+            resetLoginToStep1();
+        }
+    }
 
     // Registration Screen
     document.getElementById('do-register')?.addEventListener('click', async () => {
@@ -189,8 +215,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const DEFAULT_PASSWORD = '1234';
-    let loginStep = 'cedula'; // 'cedula' | 'password'
-    let loginUserData = null;  // datos del usuario encontrado en Firestore
+    let loginStep     = 'cedula';
+    let loginUserData = null;
+
+    function resetLoginToStep1() {
+        loginStep     = 'cedula';
+        loginUserData = null;
+        document.getElementById('login-cedula').value                       = '';
+        document.getElementById('login-password').value                     = '';
+        document.getElementById('user-display').textContent                 = 'bienvenido';
+        document.getElementById('login-subtitle').textContent               = 'Ingresa tu número de documento';
+        document.getElementById('login-cedula-section').style.display       = 'block';
+        document.getElementById('login-password-section').style.display     = 'none';
+        document.getElementById('login-not-you').style.display              = 'none';
+        document.getElementById('show-biometrics').style.display            = 'none';
+        document.getElementById('do-login').textContent                     = 'Continuar';
+        clearCedulaError();
+        clearLoginError();
+    }
 
     const showLoginCedulaError = (msg) => {
         const input = document.getElementById('login-cedula');
@@ -263,12 +305,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                // Cédula válida → mostrar campo de contraseña
+                // Cédula válida → mostrar campo de contraseña y biometría
                 console.log('[login] Usuario encontrado:', loginUserData.name);
-                document.getElementById('user-display').textContent = loginUserData.name.split(' ')[0];
-                document.getElementById('login-subtitle').textContent = 'Ingresa tu contraseña para continuar';
-                document.getElementById('login-password-section').style.display = 'block';
-                document.getElementById('do-login').textContent = 'Ingresar';
+                document.getElementById('user-display').textContent                 = loginUserData.name.split(' ')[0];
+                document.getElementById('login-subtitle').textContent               = 'Ingresa tu contraseña para continuar';
+                document.getElementById('login-cedula-section').style.display       = 'none';
+                document.getElementById('login-password-section').style.display     = 'block';
+                document.getElementById('login-not-you').style.display              = 'inline-block';
+                document.getElementById('show-biometrics').style.display            = 'flex';
+                document.getElementById('do-login').textContent                     = 'Ingresar';
                 document.getElementById('login-password').focus();
                 loginStep = 'password';
 
