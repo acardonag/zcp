@@ -98,6 +98,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
+            // Verificar si la cédula ya está registrada
+            const yaExiste = await window.checkUserExists(cedula);
+            if (yaExiste) {
+                toast.style.background = '#FEF9C3';
+                toast.style.color      = '#854D0E';
+                toast.querySelector('span').textContent = 'Ya existe una cuenta con esta cédula.';
+                toast.classList.remove('pi-toast-hidden');
+                toast.classList.add('pi-toast-visible');
+                if (window.lucide) window.lucide.createIcons();
+                document.getElementById('reg-id').classList.add('input-error');
+                setTimeout(() => {
+                    toast.classList.remove('pi-toast-visible');
+                    toast.classList.add('pi-toast-hidden');
+                    toast.style.background = '';
+                    toast.style.color      = '';
+                }, 4000);
+                btn.disabled    = false;
+                btn.textContent = 'Crear cuenta →';
+                return;
+            }
+
             console.log('🚀 Firebase listo, registrando usuario...');
             await window.registerUserInFirestore(name, cedula, email);
 
@@ -263,10 +284,15 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('dashboard-screen');
     });
 
-    // Guardar configuraci\u00f3n
-    document.getElementById('pi-save')?.addEventListener('click', () => {
+    // Guardar configuración
+    document.getElementById('pi-save')?.addEventListener('click', async () => {
         const isActive = piToggle?.checked ?? false;
         localStorage.setItem(PI_KEY, isActive);
+
+        // Sincronizar con Firestore si Firebase está listo
+        if (window.firebaseReady && window.updatePagosInteligentes) {
+            await window.updatePagosInteligentes(isActive);
+        }
 
         const msg = isActive
             ? 'Pagos Inteligentes activados correctamente'

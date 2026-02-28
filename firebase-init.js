@@ -25,6 +25,25 @@ function generateDeviceId() {
     return id;
 }
 
+// Verifica si ya existe un usuario con esa cédula
+async function checkUserExists(cedula) {
+    const snapshot = await getDoc(doc(db, 'users', cedula));
+    return snapshot.exists();
+}
+
+// Actualiza solo el campo pagosInteligentes en Firestore
+async function updatePagosInteligentes(isActive) {
+    const cedula = localStorage.getItem('bbva_user_id');
+    if (!cedula) return;
+    try {
+        const { updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        await updateDoc(doc(db, 'users', cedula), { pagosInteligentes: isActive });
+        console.log('✅ pagosInteligentes actualizado en Firestore:', isActive);
+    } catch (e) {
+        console.error('❌ Error actualizando pagosInteligentes:', e.code, e.message);
+    }
+}
+
 async function registerUserInFirestore(name, cedula, email) {
     const deviceId = generateDeviceId();
 
@@ -58,13 +77,14 @@ async function registerUserInFirestore(name, cedula, email) {
     return userData;
 }
 
-// Exponer al scope global para que app.js (script normal) pueda usarlos
-window.firebaseDB              = db;
-window.registerUserInFirestore = registerUserInFirestore;
-window.firestoreDoc            = doc;
-window.firestoreSetDoc         = setDoc;
-window.firestoreGetDoc         = getDoc;
-window.firebaseReady           = true;
+window.firebaseDB                  = db;
+window.registerUserInFirestore     = registerUserInFirestore;
+window.checkUserExists             = checkUserExists;
+window.updatePagosInteligentes     = updatePagosInteligentes;
+window.firestoreDoc                = doc;
+window.firestoreSetDoc             = setDoc;
+window.firestoreGetDoc             = getDoc;
+window.firebaseReady               = true;
 
 console.log('🔥 Firebase inicializado correctamente');
 window.dispatchEvent(new Event('firebase-ready'));
