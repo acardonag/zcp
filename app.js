@@ -191,27 +191,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Login Screen
     document.getElementById('login-back')?.addEventListener('click', () => {
-        // Resetear estado del login al volver
-        loginStep = 'cedula';
-        document.getElementById('login-cedula').value = '';
-        document.getElementById('login-password').value = '';
-        document.getElementById('login-password-section').style.display = 'none';
-        document.getElementById('user-display').textContent = 'bienvenido';
-        document.getElementById('login-subtitle').textContent = 'Ingresa tu número de documento';
-        document.getElementById('do-login').textContent = 'Continuar';
-        clearLoginError();
+        resetLoginToStep1();
         showScreen('welcome-screen');
     });
     document.getElementById('login-close')?.addEventListener('click', () => {
-        loginStep = 'cedula';
-        document.getElementById('login-cedula').value = '';
-        document.getElementById('login-password').value = '';
-        document.getElementById('login-password-section').style.display = 'none';
-        document.getElementById('user-display').textContent = 'bienvenido';
-        document.getElementById('login-subtitle').textContent = 'Ingresa tu número de documento';
-        document.getElementById('do-login').textContent = 'Continuar';
-        clearLoginError();
+        resetLoginToStep1();
         showScreen('welcome-screen');
+    });
+    document.getElementById('login-not-you')?.addEventListener('click', () => {
+        resetLoginToStep1();
     });
 
     const DEFAULT_PASSWORD = '1234';
