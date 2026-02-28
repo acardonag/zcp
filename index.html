@@ -16,8 +16,63 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Lucide Icons (as simple link or inline SVGs later) -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp }                      from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, doc, setDoc }          from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey:            "AIzaSyDFtznjbqtsJ2EOQXqic0ZvPcQWabzZ-YU",
+            authDomain:        "zero-clic-payment.firebaseapp.com",
+            projectId:         "zero-clic-payment",
+            storageBucket:     "zero-clic-payment.firebasestorage.app",
+            messagingSenderId: "367886461501",
+            appId:             "1:367886461501:web:25e36faafd8ef4dde4d854"
+        };
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db          = getFirestore(firebaseApp);
+
+        function generateDeviceId() {
+            const existing = localStorage.getItem('bbva_device_id');
+            if (existing) return existing;
+            const id = 'bbva-' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+            localStorage.setItem('bbva_device_id', id);
+            return id;
+        }
+
+        window.registerUserInFirestore = async function(name, cedula, email) {
+            const deviceId = generateDeviceId();
+            const userData = {
+                name,
+                cedula,
+                email,
+                deviceId,
+                fcmToken:          null,
+                registeredAt:      new Date().toISOString(),
+                platform:          navigator.userAgent,
+                pagosInteligentes: false
+            };
+            await setDoc(doc(db, 'users', cedula), userData);
+            localStorage.setItem('bbva_user',       name);
+            localStorage.setItem('bbva_user_name',  name);
+            localStorage.setItem('bbva_user_id',    cedula);
+            localStorage.setItem('bbva_user_email', email);
+            localStorage.setItem('bbva_device_id',  deviceId);
+            console.log('✅ Usuario guardado en Firestore:', cedula);
+            return userData;
+        };
+
+        window.firebaseReady = true;
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
 </head>
 
 <body>

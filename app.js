@@ -63,22 +63,78 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Registration Screen
-    document.getElementById('do-register')?.addEventListener('click', () => {
-        const name = document.getElementById('reg-name').value;
-        if (name) {
-            state.userName = name;
-            localStorage.setItem('bbva_user', name);
-            updateUI();
-        }
+    document.getElementById('do-register')?.addEventListener('click', async () => {
+        const name   = document.getElementById('reg-name').value.trim();
+        const cedula = document.getElementById('reg-id').value.trim();
+        const email  = document.getElementById('reg-email').value.trim();
+
+        // Limpiar errores previos
+        ['reg-name', 'reg-id', 'reg-email'].forEach(id =>
+            document.getElementById(id)?.classList.remove('input-error')
+        );
+
+        // Validar campos
+        let hasError = false;
+        if (!name)   { document.getElementById('reg-name').classList.add('input-error');  hasError = true; }
+        if (!cedula) { document.getElementById('reg-id').classList.add('input-error');    hasError = true; }
+        if (!email)  { document.getElementById('reg-email').classList.add('input-error'); hasError = true; }
+        if (hasError) return;
+
+        const btn   = document.getElementById('do-register');
         const toast = document.getElementById('reg-toast');
-        toast.classList.remove('pi-toast-hidden');
-        toast.classList.add('pi-toast-visible');
-        if (window.lucide) window.lucide.createIcons();
-        setTimeout(() => {
-            toast.classList.remove('pi-toast-visible');
-            toast.classList.add('pi-toast-hidden');
-            showScreen('login-screen');
-        }, 1800);
+        btn.disabled    = true;
+        btn.textContent = 'Guardando...';
+
+        try {
+            // Esperar a Firebase si aún no está listo
+            if (!window.firebaseReady) {
+                await new Promise(resolve =>
+                    window.addEventListener('firebase-ready', resolve, { once: true })
+                );
+            }
+
+            await window.registerUserInFirestore(name, cedula, email);
+
+            state.userName = name;
+            updateUI();
+
+            // Toast éxito
+            toast.style.background = '';
+            toast.style.color      = '';
+            toast.querySelector('span').textContent = '¡Cuenta creada exitosamente!';
+            toast.classList.remove('pi-toast-hidden');
+            toast.classList.add('pi-toast-visible');
+            if (window.lucide) window.lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('pi-toast-visible');
+                toast.classList.add('pi-toast-hidden');
+                btn.disabled    = false;
+                btn.textContent = 'Crear cuenta →';
+                showScreen('login-screen');
+            }, 1800);
+
+        } catch (err) {
+            console.error('Error Firestore:', err);
+
+            // Toast error
+            toast.style.background = '#fee2e2';
+            toast.style.color      = '#991b1b';
+            toast.querySelector('span').textContent = 'Error al guardar. Intenta de nuevo.';
+            toast.classList.remove('pi-toast-hidden');
+            toast.classList.add('pi-toast-visible');
+            if (window.lucide) window.lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('pi-toast-visible');
+                toast.classList.add('pi-toast-hidden');
+                toast.style.background = '';
+                toast.style.color      = '';
+            }, 3000);
+
+            btn.disabled    = false;
+            btn.textContent = 'Crear cuenta →';
+        }
     });
 
     document.getElementById('reg-to-login')?.addEventListener('click', () => showScreen('login-screen'));
