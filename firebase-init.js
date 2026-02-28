@@ -1,5 +1,9 @@
-import { initializeApp }                      from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { getFirestore, doc, setDoc, getDoc }      from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { getMessaging, getToken, onMessage }       from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js';
+
+// ── VAPID Key generada en Firebase Console → Project Settings → Cloud Messaging
+const VAPID_KEY = 'BL1nSLXaN-rF8d5EP2SrGAH5YPOW1BTQuq0CD6aWRN6iHUpsHVk3eYZncsHWXdrfvTrkj7SrQHKOqyPpXjuiw9M';
 
 const firebaseConfig = {
     apiKey:            "AIzaSyDFtznjbqtsJ2EOQXqic0ZvPcQWabzZ-YU",
@@ -12,6 +16,7 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db          = getFirestore(firebaseApp);
+const messaging   = getMessaging(firebaseApp);
 
 function generateDeviceId() {
     const existing = localStorage.getItem('bbva_device_id');
@@ -107,11 +112,78 @@ async function registerUserInFirestore(name, cedula, email) {
     return userData;
 }
 
+// ── Solicitar permiso push y obtener FCM Token ────────────────
+async function initPushNotifications(cedula) {
+    try {
+        if (!('Notification' in window)) {
+            console.warn('[FCM] Este navegador no soporta notificaciones');
+            return null;
+        }
+
+        console.log('[FCM] Solicitando permiso de notificaciones...');
+        const permission = await Notification.requestPermission();
+
+        if (permission !== 'granted') {
+            console.warn('[FCM] Permiso denegado por el usuario');
+            return null;
+        }
+
+        const swReg = await navigator.serviceWorker.ready;
+        const token = await getToken(messaging, {
+            vapidKey:                    VAPID_KEY,
+            serviceWorkerRegistration:   swReg
+        });
+
+        if (!token) {
+            console.warn('[FCM] No se pudo obtener el token');
+            return null;
+        }
+
+        console.log('[FCM] ✅ Token obtenido:', token);
+        localStorage.setItem('bbva_fcm_token', token);
+
+        // Guardar token en Firestore vinculado al usuario
+        if (cedula) {
+            const { updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+            await updateDoc(doc(db, 'users', cedula), {
+                fcmToken:     token,
+                fcmUpdatedAt: new Date().toISOString(),
+                deviceId:     generateDeviceId()
+            });
+            console.log('[FCM] Token guardado en Firestore para cédula:', cedula);
+        }
+
+        return token;
+    } catch (err) {
+        console.error('[FCM] Error al inicializar push:', err);
+        return null;
+    }
+}
+
+// ── Escuchar mensajes FCM en FOREGROUND ───────────────────────
+onMessage(messaging, (payload) => {
+    console.log('[FCM] Mensaje en foreground:', payload);
+    const data = payload.data || {};
+
+    if (data.type === 'BIOMETRIC_REQUEST') {
+        window.dispatchEvent(new CustomEvent('bbva-biometric-request', { detail: data }));
+    } else {
+        window.dispatchEvent(new CustomEvent('bbva-push-notification', {
+            detail: {
+                title: payload.notification?.title || 'BBVA',
+                body:  payload.notification?.body  || '',
+                data
+            }
+        }));
+    }
+});
+
 window.firebaseDB                  = db;
 window.registerUserInFirestore     = registerUserInFirestore;
 window.checkUserExists             = checkUserExists;
 window.getUserByCedula             = getUserByCedula;
 window.updatePagosInteligentes     = updatePagosInteligentes;
+window.initPushNotifications       = initPushNotifications;
 window.firestoreDoc                = doc;
 window.firestoreSetDoc             = setDoc;
 window.firestoreGetDoc             = getDoc;

