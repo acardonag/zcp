@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Login Screen
     document.getElementById('login-back')?.addEventListener('click', () => showScreen('welcome-screen'));
+    document.getElementById('login-close')?.addEventListener('click', () => showScreen('welcome-screen'));
     
     const DEFAULT_PASSWORD = '1234';
 

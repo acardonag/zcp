@@ -77,9 +77,13 @@
         <!-- SCREEN 3: LOGIN -->
         <section id="login-screen" class="screen fade-in">
             <div class="login-header">
-                <i data-lucide="arrow-left" style="color: var(--bbva-navy); cursor: pointer;" id="login-back"></i>
+                <button id="login-back" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;">
+                    <i data-lucide="arrow-left" style="color: var(--bbva-navy);"></i>
+                </button>
                 <div style="flex: 1; text-align: center; font-weight: 700; color: var(--bbva-navy);">BBVA</div>
-                <i data-lucide="x" style="color: var(--bbva-navy); cursor: pointer;"></i>
+                <button id="login-close" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;">
+                    <i data-lucide="x" style="color: var(--bbva-navy);"></i>
+                </button>
             </div>
             <div class="login-content">
                 <h2 id="login-greeting">Hola, <span id="user-display">Invitado</span></h2>

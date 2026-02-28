@@ -1,14 +1,13 @@
-const CACHE_NAME = 'bbva-app-v1';
+const CACHE_NAME = 'bbva-app-v2';
 const ASSETS = [
     './',
     './index.html',
     './payment-approval.html',
     './styles.css',
     './app.js',
+    './firebase-init.js',
     './manifest.json',
-    './icono-pwa.png',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap',
-    'https://unpkg.com/lucide@latest'
+    './icono-pwa.png'
 ];
 
 // Instalación: cachear todos los assets
@@ -35,22 +34,33 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch: responder desde caché, con fallback a red
+// URLs que siempre deben ir a la red (Firebase APIs y Firestore)
+const NETWORK_ONLY = [
+    'firestore.googleapis.com',
+    'firebase.googleapis.com',
+    'identitytoolkit.googleapis.com',
+    'securetoken.googleapis.com'
+];
+
+// Fetch: network-only para Firebase APIs, cache-first para el resto
 self.addEventListener('fetch', (event) => {
-    // Solo manejar GET
     if (event.request.method !== 'GET') return;
+
+    const url = event.request.url;
+
+    // Firebase/Firestore → siempre red, nunca caché
+    if (NETWORK_ONLY.some(domain => url.includes(domain))) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
 
     event.respondWith(
         caches.match(event.request).then((cached) => {
             if (cached) return cached;
             return fetch(event.request)
                 .then((response) => {
-                    // Cachear respuestas exitosas de mismo origen
-                    if (
-                        response &&
-                        response.status === 200 &&
-                        response.type === 'basic'
-                    ) {
+                    // Cachear respuestas exitosas (SDK de Firebase, fonts, lucide, assets)
+                    if (response && response.status === 200) {
                         const clone = response.clone();
                         caches.open(CACHE_NAME).then((cache) =>
                             cache.put(event.request, clone)
