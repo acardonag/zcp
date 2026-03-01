@@ -3,6 +3,30 @@
 
 <head>
     <meta charset="UTF-8">
+    <script>
+        // Limpiar SW viejos de otros dominios (GitHub Pages, etc.)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(reg => {
+                    if (!reg.scope.includes(location.hostname)) {
+                        console.log('[SW] Eliminando SW de otro dominio:', reg.scope);
+                        reg.unregister();
+                    }
+                });
+            });
+            // Limpiar caches de versiones viejas
+            if (window.caches) {
+                caches.keys().then(keys => {
+                    keys.forEach(key => {
+                        if (!key.includes('v15')) {
+                            console.log('[Cache] Eliminando cache viejo:', key);
+                            caches.delete(key);
+                        }
+                    });
+                });
+            }
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BBVA Colombia - App</title>
     <link rel="manifest" href="manifest.json">
