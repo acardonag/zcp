@@ -114,7 +114,11 @@ messaging.onBackgroundMessage((payload) => {
         tag:                data.type || 'bbva-notification',
         requireInteraction: true,
         vibrate:            [200, 100, 200],
-        data,
+        data: {
+            type:      data.type      || '',
+            cedula:    data.cedula    || '',
+            sessionId: data.sessionId || ''
+        },
         actions
     });
 });
@@ -137,13 +141,13 @@ self.addEventListener('notificationclick', (event) => {
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             for (const client of clientList) {
-                // Si la app ya está abierta: enviar mensaje y enfocar
                 if ('focus' in client) {
+                    // App abierta: navegar a la URL correcta y enfocar
                     client.postMessage({ type: data.type || 'PUSH_CLICK', action, ...data });
-                    return client.focus();
+                    return client.focus().then(() => client.navigate(targetUrl));
                 }
             }
-            // App no está abierta: abrir con deep link
+            // App cerrada: abrir con deep link
             return clients.openWindow(targetUrl);
         })
     );
