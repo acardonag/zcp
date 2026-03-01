@@ -172,23 +172,19 @@ onMessage(messaging, (payload) => {
     const title = notif.title || 'BBVA Colombia';
     const body  = notif.body  || '';
 
-    // 1️⃣ Notificación nativa visible aunque la app esté abierta
+    // 1️⃣ Notificación nativa via SW (funciona en PWA y navegador)
     if (Notification.permission === 'granted') {
-        const n = new Notification(title, {
-            body,
-            icon:    '/zcp/icono-pwa.png',
-            badge:   '/zcp/icono-pwa.png',
-            tag:     data.type || 'bbva-foreground',
-            vibrate: [200, 100, 200]
-        });
-        n.onclick = () => {
-            window.focus();
-            n.close();
-            if (data.type === 'BIOMETRIC_REQUEST') {
-                window.dispatchEvent(new CustomEvent('bbva-biometric-request', { detail: data }));
-            }
-        };
-        console.log('[FCM] ✅ Notificación nativa mostrada');
+        navigator.serviceWorker.ready.then((swReg) => {
+            swReg.showNotification(title, {
+                body,
+                icon:    '/zcp/icono-pwa.png',
+                badge:   '/zcp/icono-pwa.png',
+                tag:     data.type || 'bbva-foreground',
+                vibrate: [200, 100, 200],
+                data
+            });
+            console.log('[FCM] ✅ Notificación nativa mostrada via SW');
+        }).catch(err => console.error('[FCM] ❌ Error mostrando notificación:', err));
     } else {
         console.warn('[FCM] ⚠️ Permiso de notificaciones:', Notification.permission);
     }
