@@ -277,19 +277,9 @@ document.addEventListener('DOMContentLoaded', () => {
         err?.classList.add('login-error-hidden');
     };
 
-    // ── Auth desde notificación push: pre-cargar cédula y saltar al paso biométrico ──
+    // ── Auth desde notificación push: buscar usuario y abrir modal biométrico ──
     async function triggerAuthFromPush(cedula) {
-        resetLoginToStep1();
-        showScreen('login-screen');
-
-        const banner = document.getElementById('login-auth-banner');
-        if (banner) {
-            banner.style.display = 'flex';
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        const btn = document.getElementById('do-login');
-        if (btn) { btn.disabled = true; btn.textContent = 'Verificando…'; }
+        console.log('[auth-push] Iniciando para cédula:', cedula);
 
         try {
             if (!window.firebaseReady) {
@@ -301,31 +291,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const userData = await window.getUserByCedula(cedula);
             if (!userData) {
-                if (banner) banner.style.display = 'none';
-                resetLoginToStep1();
-                showLoginCedulaError('No encontramos esta cédula registrada.');
-                if (btn) { btn.disabled = false; btn.textContent = 'Continuar'; }
+                console.warn('[auth-push] Usuario no encontrado:', cedula);
                 return;
             }
 
+            // Guardar datos del usuario para el flujo biométrico
             loginUserData = userData;
             loginStep     = 'password';
+            sessionStorage.setItem('bbva_auth_from_push', '1');
 
-            document.getElementById('user-display').textContent              = userData.name.split(' ')[0];
-            document.getElementById('login-subtitle').textContent            = 'Verifica tu identidad para continuar';
-            document.getElementById('login-cedula-section').style.display    = 'none';
-            document.getElementById('login-password-section').style.display  = 'block';
-            document.getElementById('login-not-you').style.display           = 'inline-block';
-            document.getElementById('show-biometrics').style.display         = 'flex';
-            document.getElementById('do-login').textContent                  = 'Ingresar';
+            // Abrir directamente el modal biométrico
+            const bm = document.getElementById('biometric-modal');
+            if (bm) {
+                bm.style.display = 'flex';
+                if (window.lucide) window.lucide.createIcons();
+            }
 
         } catch (err) {
             console.error('[auth-push] Error:', err);
-            if (banner) banner.style.display = 'none';
-            resetLoginToStep1();
         }
-
-        if (btn) btn.disabled = false;
     }
 
     document.getElementById('login-cedula')?.addEventListener('input', clearCedulaError);

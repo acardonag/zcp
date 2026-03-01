@@ -205,12 +205,10 @@ onMessage(messaging, (payload) => {
     }
 
     // 2️⃣ Toast / modal dentro de la app según el tipo
+    // AUTH_REQUEST: solo mostrar notificación nativa (el flujo se activa cuando el usuario hace clic)
     if (data.type === 'BIOMETRIC_REQUEST') {
         window.dispatchEvent(new CustomEvent('bbva-biometric-request', { detail: data }));
-    } else if (data.type === 'AUTH_REQUEST') {
-        // Deep link de autenticación: mostrar pantalla de login con la cédula precargada
-        window.dispatchEvent(new CustomEvent('bbva-auth-request', { detail: data }));
-    } else {
+    } else if (data.type !== 'AUTH_REQUEST') {
         window.dispatchEvent(new CustomEvent('bbva-push-notification', {
             detail: { title, body, data }
         }));
