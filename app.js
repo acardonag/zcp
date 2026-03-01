@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // ── Login state (declarado al inicio para evitar TDZ en triggerAuthFromPush) ──
+    const DEFAULT_PASSWORD = '1234';
+    let loginStep     = 'cedula';
+    let loginUserData = null;
+
     // ── State ──
     const state = {
         userName: localStorage.getItem('bbva_user') || '',
@@ -222,9 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetLoginToStep1();
     });
 
-    const DEFAULT_PASSWORD = '1234';
-    let loginStep     = 'cedula';
-    let loginUserData = null;
+    // DEFAULT_PASSWORD, loginStep y loginUserData declarados al inicio del callback
 
     function resetLoginToStep1() {
         loginStep     = 'cedula';
