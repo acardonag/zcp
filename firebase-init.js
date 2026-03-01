@@ -129,10 +129,10 @@ async function initPushNotifications(cedula) {
             return null;
         }
 
-        // Registrar sw.js con path correcto según el dominio
-        const isGithub = location.hostname === 'acardonag.github.io';
-        const swPath   = isGithub ? '/zcp/sw.js' : '/sw.js';
-        const swScope  = isGithub ? '/zcp/'       : '/';
+        // Registrar sw.js con path dinámico según el dominio
+        const swPath  = location.hostname === 'acardonag.github.io' ? '/zcp/sw.js' : '/sw.js';
+        const swScope = location.hostname === 'acardonag.github.io' ? '/zcp/'      : '/';
+        console.log('[FCM] Registrando SW en:', swPath, '| Scope:', swScope);
         const swReg = await navigator.serviceWorker.register(swPath, { scope: swScope });
         await navigator.serviceWorker.ready;
         console.log('[FCM] ✅ SW registrado:', swReg.scope);
