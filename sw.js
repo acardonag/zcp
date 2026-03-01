@@ -14,7 +14,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // ── Cache ──────────────────────────────────────────────────────
-const CACHE_NAME = 'bbva-app-v14';
+const CACHE_NAME = 'bbva-app-v15';
 const ASSETS = [
     '/',
     '/index.html',
@@ -126,7 +126,7 @@ self.addEventListener('notificationclick', (event) => {
                     return client.focus();
                 }
             }
-            return clients.openWindow('/?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || ''));
+            return clients.openWindow('https://zcp.augusto-cardona.workers.dev/?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || ''));
         })
     );
 });
