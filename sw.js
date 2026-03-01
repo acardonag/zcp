@@ -14,7 +14,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // ── Cache ──────────────────────────────────────────────────────
-const CACHE_NAME = 'bbva-app-v10';
+const CACHE_NAME = 'bbva-app-v11';
 const ASSETS = [
     '/zcp/',
     '/zcp/index.html',
@@ -27,7 +27,7 @@ const ASSETS = [
 
 // ── Install ────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
-    console.log('[SW v10] Instalando...');
+    console.log('[SW v11] Instalando...');
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
@@ -36,7 +36,7 @@ self.addEventListener('install', (event) => {
 
 // ── Activate ───────────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-    console.log('[SW v10] Activando...');
+    console.log('[SW v11] Activando...');
     event.waitUntil(
         caches.keys().then((keys) =>
             Promise.all(
@@ -114,7 +114,7 @@ self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const data   = event.notification.data || {};
     const action = event.action;
-    console.log('[SW v10] Clic en notificación. Action:', action, '| Data:', data);
+    console.log('[SW v11] Clic en notificación. Action:', action, '| Data:', data);
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
