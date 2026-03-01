@@ -129,8 +129,11 @@ async function initPushNotifications(cedula) {
             return null;
         }
 
-        // Registrar sw.js en la raíz
-        const swReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        // Registrar sw.js con path correcto según el dominio
+        const isGithub = location.hostname === 'acardonag.github.io';
+        const swPath   = isGithub ? '/zcp/sw.js' : '/sw.js';
+        const swScope  = isGithub ? '/zcp/'       : '/';
+        const swReg = await navigator.serviceWorker.register(swPath, { scope: swScope });
         await navigator.serviceWorker.ready;
         console.log('[FCM] ✅ SW registrado:', swReg.scope);
         console.log('[FCM] SW estado:', swReg.active?.state);

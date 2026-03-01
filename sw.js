@@ -14,15 +14,18 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // ── Cache ──────────────────────────────────────────────────────
-const CACHE_NAME = 'bbva-app-v15';
+const CACHE_NAME = 'bbva-app-v16';
+// Detectar base path según el dominio
+const IS_GITHUB = self.location.hostname === 'acardonag.github.io';
+const BASE = IS_GITHUB ? '/zcp' : '';
 const ASSETS = [
-    '/',
-    '/index.html',
-    '/styles.css',
-    '/app.js',
-    '/firebase-init.js',
-    '/manifest.json',
-    '/icono-pwa.png'
+    BASE + '/',
+    BASE + '/index.html',
+    BASE + '/styles.css',
+    BASE + '/app.js',
+    BASE + '/firebase-init.js',
+    BASE + '/manifest.json',
+    BASE + '/icono-pwa.png'
 ];
 
 // ── Install ────────────────────────────────────────────────────
@@ -82,7 +85,7 @@ self.addEventListener('fetch', (event) => {
                 })
                 .catch(() => {
                     if (event.request.mode === 'navigate') {
-                        return caches.match('/index.html');
+                        return caches.match(BASE + '/index.html');
                     }
                 });
         })
@@ -130,13 +133,15 @@ self.addEventListener('notificationclick', (event) => {
     const action = event.action;
     console.log('[SW] Clic en notificación. Action:', action, '| Data:', data);
 
-    // Construir URL de deep link según el tipo de notificación
+    // Construir URL de deep link detectando el scope dinámicamente
+    const base = self.registration.scope; // ej: https://acardonag.github.io/zcp/
     let targetUrl;
     if (data.type === 'AUTH_REQUEST') {
-        targetUrl = 'https://zcp.augusto-cardona.workers.dev/?auth=1&cedula=' + encodeURIComponent(data.cedula || '');
+        targetUrl = base + '?auth=1&cedula=' + encodeURIComponent(data.cedula || '');
     } else {
-        targetUrl = 'https://zcp.augusto-cardona.workers.dev/?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || '');
+        targetUrl = base + '?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || '');
     }
+    console.log('[SW] Navegando a:', targetUrl);
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
