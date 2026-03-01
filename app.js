@@ -42,6 +42,22 @@ document.addEventListener('DOMContentLoaded', () => {
         history.replaceState({}, '', window.location.pathname);
     }
 
+    // ── Deep link desde push de autenticación: ?auth=1&cedula=XXXXXXXX ──
+    if (urlParams.get('auth') === '1') {
+        const cedula = urlParams.get('cedula') || '';
+        history.replaceState({}, '', window.location.pathname);
+        if (cedula) {
+            sessionStorage.setItem('bbva_auth_from_push', '1');
+            // Esperar a que el DOM y Firebase estén listos antes de navegar
+            const doAuth = () => triggerAuthFromPush(cedula);
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                doAuth();
+            } else {
+                window.addEventListener('load', doAuth, { once: true });
+            }
+        }
+    }
+
     // ── Welcome Screen ──
     document.getElementById('to-register')?.addEventListener('click', () => {
         const hint = document.getElementById('register-hint');
@@ -218,6 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('login-not-you').style.display              = 'none';
         document.getElementById('show-biometrics').style.display            = 'none';
         document.getElementById('do-login').textContent                     = 'Continuar';
+        // Ocultar banner de autenticación push
+        const banner = document.getElementById('login-auth-banner');
+        if (banner) banner.style.display = 'none';
         clearCedulaError();
         clearLoginError();
     }
@@ -257,6 +276,57 @@ document.addEventListener('DOMContentLoaded', () => {
         err?.classList.remove('login-error-visible');
         err?.classList.add('login-error-hidden');
     };
+
+    // ── Auth desde notificación push: pre-cargar cédula y saltar al paso biométrico ──
+    async function triggerAuthFromPush(cedula) {
+        resetLoginToStep1();
+        showScreen('login-screen');
+
+        const banner = document.getElementById('login-auth-banner');
+        if (banner) {
+            banner.style.display = 'flex';
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        const btn = document.getElementById('do-login');
+        if (btn) { btn.disabled = true; btn.textContent = 'Verificando…'; }
+
+        try {
+            if (!window.firebaseReady) {
+                await new Promise((resolve, reject) => {
+                    const t = setTimeout(() => reject(new Error('Firebase timeout')), 10000);
+                    window.addEventListener('firebase-ready', () => { clearTimeout(t); resolve(); }, { once: true });
+                });
+            }
+
+            const userData = await window.getUserByCedula(cedula);
+            if (!userData) {
+                if (banner) banner.style.display = 'none';
+                resetLoginToStep1();
+                showLoginCedulaError('No encontramos esta cédula registrada.');
+                if (btn) { btn.disabled = false; btn.textContent = 'Continuar'; }
+                return;
+            }
+
+            loginUserData = userData;
+            loginStep     = 'password';
+
+            document.getElementById('user-display').textContent              = userData.name.split(' ')[0];
+            document.getElementById('login-subtitle').textContent            = 'Verifica tu identidad para continuar';
+            document.getElementById('login-cedula-section').style.display    = 'none';
+            document.getElementById('login-password-section').style.display  = 'block';
+            document.getElementById('login-not-you').style.display           = 'inline-block';
+            document.getElementById('show-biometrics').style.display         = 'flex';
+            document.getElementById('do-login').textContent                  = 'Ingresar';
+
+        } catch (err) {
+            console.error('[auth-push] Error:', err);
+            if (banner) banner.style.display = 'none';
+            resetLoginToStep1();
+        }
+
+        if (btn) btn.disabled = false;
+    }
 
     document.getElementById('login-cedula')?.addEventListener('input', clearCedulaError);
     document.getElementById('login-password')?.addEventListener('input', clearLoginError);
@@ -350,9 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         biometricModal.style.display = 'none';
     });
 
-    // Final "Biometric" Trigger (Click on Fingerprint)
     document.getElementById('fingerprint-scan')?.addEventListener('click', () => {
-        // Simulate scanning animation
         const icon = document.querySelector('#fingerprint-scan svg') || document.querySelector('#fingerprint-scan i');
         if (icon) {
             icon.style.transition = 'color 0.5s ease, stroke 0.5s ease';
@@ -360,15 +428,40 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.style.stroke = '#1173d4';
         }
 
+        const isFromPush = sessionStorage.getItem('bbva_auth_from_push') === '1';
+
         setTimeout(() => {
             biometricModal.style.display = 'none';
-            // Show logical success
-            updatePromoBanner();
-            showScreen('dashboard-screen');
-            showPIWelcomeModal();
-            // Solicitar permiso push y registrar FCM token
-            const cedBio = localStorage.getItem('bbva_user_id');
-            if (window.initPushNotifications) window.initPushNotifications(cedBio);
+
+            if (isFromPush) {
+                // ── Flujo desde notificación push ──
+                sessionStorage.removeItem('bbva_auth_from_push');
+                if (loginUserData) {
+                    state.userName = loginUserData.name;
+                    localStorage.setItem('bbva_user',               loginUserData.name);
+                    localStorage.setItem('bbva_user_id',             loginUserData.cedula);
+                    localStorage.setItem('bbva_pagos_inteligentes',  loginUserData.pagosInteligentes ? 'true' : 'false');
+                    updateUI();
+                }
+                updatePromoBanner();
+                showScreen('dashboard-screen');
+                // Mostrar modal de éxito de autenticación
+                const successModal = document.getElementById('auth-success-modal');
+                if (successModal) {
+                    successModal.style.display = 'flex';
+                    if (window.lucide) window.lucide.createIcons();
+                }
+                const cedBio = localStorage.getItem('bbva_user_id');
+                if (window.initPushNotifications) window.initPushNotifications(cedBio);
+            } else {
+                // ── Flujo normal de biometría ──
+                updatePromoBanner();
+                showScreen('dashboard-screen');
+                showPIWelcomeModal();
+                const cedBio = localStorage.getItem('bbva_user_id');
+                if (window.initPushNotifications) window.initPushNotifications(cedBio);
+            }
+
             if (icon) {
                 icon.style.color = '';
                 icon.style.stroke = '';
@@ -467,6 +560,40 @@ document.addEventListener('DOMContentLoaded', () => {
             bm.style.display = 'flex';
             if (window.lucide) window.lucide.createIcons();
         }
+    });
+
+    // ── Escuchar evento de autenticación desde push (foreground) ──
+    window.addEventListener('bbva-auth-request', (event) => {
+        const data = event.detail;
+        console.log('[push] Auth request recibido (foreground):', data);
+        if (data.cedula) {
+            sessionStorage.setItem('bbva_auth_from_push', '1');
+            triggerAuthFromPush(data.cedula);
+        }
+    });
+
+    // ── Escuchar mensajes del SW (app abierta, usuario clica la notificación) ──
+    navigator.serviceWorker?.addEventListener('message', (event) => {
+        const msg = event.data || {};
+        console.log('[SW → app] Mensaje recibido:', msg);
+        if (msg.type === 'AUTH_REQUEST' && msg.cedula) {
+            sessionStorage.setItem('bbva_auth_from_push', '1');
+            triggerAuthFromPush(msg.cedula);
+        } else if (msg.type === 'BIOMETRIC_REQUEST') {
+            sessionStorage.setItem('bbva_auth_session',  msg.sessionId     || '');
+            sessionStorage.setItem('bbva_telegram_chat', msg.telegramChatId || '');
+            const bm = document.getElementById('biometric-modal');
+            if (bm) {
+                bm.style.display = 'flex';
+                if (window.lucide) window.lucide.createIcons();
+            }
+        }
+    });
+
+    // ── Modal de éxito de autenticación ──
+    document.getElementById('auth-success-cta')?.addEventListener('click', () => {
+        document.getElementById('auth-success-modal').style.display = 'none';
+        showPIWelcomeModal();
     });
 
     window.addEventListener('bbva-push-notification', (event) => {

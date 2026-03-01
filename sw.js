@@ -91,23 +91,31 @@ self.addEventListener('fetch', (event) => {
 
 // ── FCM: notificaciones en BACKGROUND ─────────────────────────
 messaging.onBackgroundMessage((payload) => {
-    console.log('[SW v11] 🔔 Push en background:', payload);
+    console.log('[SW] 🔔 Push en background:', payload);
     const { title, body } = payload.notification || {};
     const data = payload.data || {};
 
-    // IMPORTANTE: return para que el SW no termine antes de mostrar la notificación
+    let actions = [];
+    if (data.type === 'BIOMETRIC_REQUEST') {
+        actions = [
+            { action: 'approve', title: '✅ Aprobar' },
+            { action: 'reject',  title: '❌ Rechazar' }
+        ];
+    } else if (data.type === 'AUTH_REQUEST') {
+        actions = [
+            { action: 'verify', title: '🔐 Verificar identidad' }
+        ];
+    }
+
     return self.registration.showNotification(title || 'BBVA Colombia', {
         body:               body || 'Tienes una nueva notificación',
         icon:               '/icono-pwa.png',
         badge:              '/icono-pwa.png',
         tag:                data.type || 'bbva-notification',
-        requireInteraction: true,  // no desaparece sola
+        requireInteraction: true,
         vibrate:            [200, 100, 200],
         data,
-        actions: data.type === 'BIOMETRIC_REQUEST' ? [
-            { action: 'approve', title: '✅ Aprobar' },
-            { action: 'reject',  title: '❌ Rechazar' }
-        ] : []
+        actions
     });
 });
 
@@ -116,17 +124,27 @@ self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const data   = event.notification.data || {};
     const action = event.action;
-    console.log('[SW v11] Clic en notificación. Action:', action, '| Data:', data);
+    console.log('[SW] Clic en notificación. Action:', action, '| Data:', data);
+
+    // Construir URL de deep link según el tipo de notificación
+    let targetUrl;
+    if (data.type === 'AUTH_REQUEST') {
+        targetUrl = 'https://zcp.augusto-cardona.workers.dev/?auth=1&cedula=' + encodeURIComponent(data.cedula || '');
+    } else {
+        targetUrl = 'https://zcp.augusto-cardona.workers.dev/?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || '');
+    }
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             for (const client of clientList) {
+                // Si la app ya está abierta: enviar mensaje y enfocar
                 if ('focus' in client) {
                     client.postMessage({ type: data.type || 'PUSH_CLICK', action, ...data });
                     return client.focus();
                 }
             }
-            return clients.openWindow('https://zcp.augusto-cardona.workers.dev/?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || ''));
+            // App no está abierta: abrir con deep link
+            return clients.openWindow(targetUrl);
         })
     );
 });
