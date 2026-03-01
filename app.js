@@ -45,16 +45,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Deep link desde push de autenticación: ?auth=1&cedula=XXXXXXXX ──
     if (urlParams.get('auth') === '1') {
         const cedula = urlParams.get('cedula') || '';
+        console.log('[url-params] 🔔 Push deep link detectado. Cédula:', cedula);
         history.replaceState({}, '', window.location.pathname);
         if (cedula) {
             sessionStorage.setItem('bbva_auth_from_push', '1');
-            // Esperar a que el DOM y Firebase estén listos antes de navegar
-            const doAuth = () => triggerAuthFromPush(cedula);
-            if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                doAuth();
-            } else {
-                window.addEventListener('load', doAuth, { once: true });
-            }
+            // Esperar tanto al DOM como a Firebase antes de ejecutar
+            const doAuth = async () => {
+                console.log('[url-params] Ejecutando triggerAuthFromPush para:', cedula);
+                console.log('[url-params] firebaseReady:', window.firebaseReady, '| getUserByCedula:', typeof window.getUserByCedula);
+                await triggerAuthFromPush(cedula);
+            };
+            // Defer para asegurar que todos los listeners de app.js estén listos
+            setTimeout(doAuth, 100);
+        } else {
+            console.warn('[url-params] ⚠️ Push deep link sin cédula en URL');
         }
     }
 
@@ -279,19 +283,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Auth desde notificación push: buscar usuario y abrir modal biométrico ──
     async function triggerAuthFromPush(cedula) {
-        console.log('[auth-push] Iniciando para cédula:', cedula);
+        console.log('[auth-push] 🔔 triggerAuthFromPush() llamado con cédula:', cedula);
+        console.log('[auth-push] Estado actual → firebaseReady:', window.firebaseReady, '| getUserByCedula:', typeof window.getUserByCedula);
 
         try {
-            if (!window.firebaseReady) {
+            // Esperar a Firebase si no está listo
+            if (!window.firebaseReady || typeof window.getUserByCedula !== 'function') {
+                console.log('[auth-push] ⏳ Esperando evento firebase-ready...');
                 await new Promise((resolve, reject) => {
-                    const t = setTimeout(() => reject(new Error('Firebase timeout')), 10000);
-                    window.addEventListener('firebase-ready', () => { clearTimeout(t); resolve(); }, { once: true });
+                    const t = setTimeout(() => reject(new Error('Firebase timeout 10s')), 10000);
+                    window.addEventListener('firebase-ready', () => {
+                        console.log('[auth-push] ✅ firebase-ready recibido');
+                        clearTimeout(t);
+                        resolve();
+                    }, { once: true });
                 });
             }
 
+            console.log('[auth-push] 🔍 Buscando usuario en Firestore para cédula:', cedula);
             const userData = await window.getUserByCedula(cedula);
+            console.log('[auth-push] Resultado Firestore:', userData ? '✅ encontrado: ' + userData.name : '❌ no encontrado');
+
             if (!userData) {
-                console.warn('[auth-push] Usuario no encontrado:', cedula);
+                console.warn('[auth-push] ⚠️ Usuario no encontrado, abortando flujo biométrico');
                 return;
             }
 
@@ -299,16 +313,30 @@ document.addEventListener('DOMContentLoaded', () => {
             loginUserData = userData;
             loginStep     = 'password';
             sessionStorage.setItem('bbva_auth_from_push', '1');
+            console.log('[auth-push] loginUserData seteado:', loginUserData.name, '| loginStep:', loginStep);
+
+            // Mostrar nombre en el modal biométrico
+            const userInfo = document.getElementById('biometric-user-info');
+            const userName = document.getElementById('biometric-user-name');
+            if (userInfo && userName) {
+                userName.textContent = userData.name.split(' ').slice(0, 2).join(' ');
+                userInfo.style.display = 'block';
+                console.log('[auth-push] Nombre mostrado en modal:', userName.textContent);
+            }
 
             // Abrir directamente el modal biométrico
             const bm = document.getElementById('biometric-modal');
             if (bm) {
+                console.log('[auth-push] 👁️ Abriendo modal biométrico...');
                 bm.style.display = 'flex';
                 if (window.lucide) window.lucide.createIcons();
+                console.log('[auth-push] ✅ Modal biométrico abierto');
+            } else {
+                console.error('[auth-push] ❌ No se encontró el elemento #biometric-modal en el DOM');
             }
 
         } catch (err) {
-            console.error('[auth-push] Error:', err);
+            console.error('[auth-push] ❌ Error en triggerAuthFromPush:', err.message, err);
         }
     }
 
@@ -402,9 +430,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelector('.modal-cancel')?.addEventListener('click', () => {
         biometricModal.style.display = 'none';
+        // Ocultar info de usuario push al cancelar
+        const userInfo = document.getElementById('biometric-user-info');
+        if (userInfo) userInfo.style.display = 'none';
+        sessionStorage.removeItem('bbva_auth_from_push');
+        console.log('[biometric] Modal cancelado');
     });
 
     document.getElementById('fingerprint-scan')?.addEventListener('click', () => {
+        console.log('[fingerprint] 👆 Huella tocada');
         const icon = document.querySelector('#fingerprint-scan svg') || document.querySelector('#fingerprint-scan i');
         if (icon) {
             icon.style.transition = 'color 0.5s ease, stroke 0.5s ease';
@@ -413,19 +447,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const isFromPush = sessionStorage.getItem('bbva_auth_from_push') === '1';
+        console.log('[fingerprint] isFromPush:', isFromPush, '| loginUserData:', loginUserData?.name || 'null');
 
         setTimeout(() => {
             biometricModal.style.display = 'none';
+            // Ocultar info de usuario push
+            const userInfo = document.getElementById('biometric-user-info');
+            if (userInfo) userInfo.style.display = 'none';
 
             if (isFromPush) {
                 // ── Flujo desde notificación push ──
                 sessionStorage.removeItem('bbva_auth_from_push');
+                console.log('[fingerprint] Flujo PUSH → loginUserData:', loginUserData?.name);
                 if (loginUserData) {
                     state.userName = loginUserData.name;
                     localStorage.setItem('bbva_user',               loginUserData.name);
                     localStorage.setItem('bbva_user_id',             loginUserData.cedula);
                     localStorage.setItem('bbva_pagos_inteligentes',  loginUserData.pagosInteligentes ? 'true' : 'false');
                     updateUI();
+                    console.log('[fingerprint] ✅ Usuario guardado en localStorage:', loginUserData.name);
+                } else {
+                    console.warn('[fingerprint] ⚠️ loginUserData es null en flujo push');
                 }
                 updatePromoBanner();
                 showScreen('dashboard-screen');
@@ -434,11 +476,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (successModal) {
                     successModal.style.display = 'flex';
                     if (window.lucide) window.lucide.createIcons();
+                    console.log('[fingerprint] ✅ Modal de éxito mostrado');
                 }
                 const cedBio = localStorage.getItem('bbva_user_id');
                 if (window.initPushNotifications) window.initPushNotifications(cedBio);
             } else {
                 // ── Flujo normal de biometría ──
+                console.log('[fingerprint] Flujo NORMAL → dashboard');
                 updatePromoBanner();
                 showScreen('dashboard-screen');
                 showPIWelcomeModal();
