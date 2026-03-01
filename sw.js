@@ -14,7 +14,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // ── Cache ──────────────────────────────────────────────────────
-const CACHE_NAME = 'bbva-app-v11';
+const CACHE_NAME = 'bbva-app-v12';
 const ASSETS = [
     '/zcp/',
     '/zcp/index.html',
@@ -91,16 +91,18 @@ self.addEventListener('fetch', (event) => {
 
 // ── FCM: notificaciones en BACKGROUND ─────────────────────────
 messaging.onBackgroundMessage((payload) => {
-    console.log('[SW v10] 🔔 Push en background:', payload);
+    console.log('[SW v11] 🔔 Push en background:', payload);
     const { title, body } = payload.notification || {};
     const data = payload.data || {};
 
-    self.registration.showNotification(title || 'BBVA Colombia', {
+    // IMPORTANTE: return para que el SW no termine antes de mostrar la notificación
+    return self.registration.showNotification(title || 'BBVA Colombia', {
         body:               body || 'Tienes una nueva notificación',
         icon:               '/zcp/icono-pwa.png',
         badge:              '/zcp/icono-pwa.png',
         tag:                data.type || 'bbva-notification',
-        requireInteraction: data.type === 'BIOMETRIC_REQUEST',
+        requireInteraction: true,  // no desaparece sola
+        vibrate:            [200, 100, 200],
         data,
         actions: data.type === 'BIOMETRIC_REQUEST' ? [
             { action: 'approve', title: '✅ Aprobar' },
