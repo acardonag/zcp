@@ -129,8 +129,8 @@ async function initPushNotifications(cedula) {
             return null;
         }
 
-        // Registrar sw.js unificado
-        const swReg = await navigator.serviceWorker.register('/zcp/sw.js', { scope: '/zcp/' });
+        // Registrar sw.js en la raíz
+        const swReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
         await navigator.serviceWorker.ready;
         console.log('[FCM] ✅ SW registrado:', swReg.scope);
         console.log('[FCM] SW estado:', swReg.active?.state);
@@ -189,8 +189,8 @@ onMessage(messaging, (payload) => {
         navigator.serviceWorker.ready.then((swReg) => {
             swReg.showNotification(title, {
                 body,
-                icon:    '/zcp/icono-pwa.png',
-                badge:   '/zcp/icono-pwa.png',
+                icon:    '/icono-pwa.png',
+                badge:   '/icono-pwa.png',
                 tag:     data.type || 'bbva-foreground',
                 vibrate: [200, 100, 200],
                 data

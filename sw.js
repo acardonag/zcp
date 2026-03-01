@@ -14,20 +14,20 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // ── Cache ──────────────────────────────────────────────────────
-const CACHE_NAME = 'bbva-app-v13';
+const CACHE_NAME = 'bbva-app-v14';
 const ASSETS = [
-    '/zcp/',
-    '/zcp/index.html',
-    '/zcp/styles.css',
-    '/zcp/app.js',
-    '/zcp/firebase-init.js',
-    '/zcp/manifest.json',
-    '/zcp/icono-pwa.png'
+    '/',
+    '/index.html',
+    '/styles.css',
+    '/app.js',
+    '/firebase-init.js',
+    '/manifest.json',
+    '/icono-pwa.png'
 ];
 
 // ── Install ────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
-    console.log('[SW v11] Instalando...');
+    console.log('[SW v14] Instalando...');
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
@@ -36,7 +36,7 @@ self.addEventListener('install', (event) => {
 
 // ── Activate ───────────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
-    console.log('[SW v11] Activando...');
+    console.log('[SW v14] Activando...');
     event.waitUntil(
         caches.keys().then((keys) =>
             Promise.all(
@@ -82,7 +82,7 @@ self.addEventListener('fetch', (event) => {
                 })
                 .catch(() => {
                     if (event.request.mode === 'navigate') {
-                        return caches.match('/zcp/index.html');
+                        return caches.match('/index.html');
                     }
                 });
         })
@@ -98,8 +98,8 @@ messaging.onBackgroundMessage((payload) => {
     // IMPORTANTE: return para que el SW no termine antes de mostrar la notificación
     return self.registration.showNotification(title || 'BBVA Colombia', {
         body:               body || 'Tienes una nueva notificación',
-        icon:               '/zcp/icono-pwa.png',
-        badge:              '/zcp/icono-pwa.png',
+        icon:               '/icono-pwa.png',
+        badge:              '/icono-pwa.png',
         tag:                data.type || 'bbva-notification',
         requireInteraction: true,  // no desaparece sola
         vibrate:            [200, 100, 200],
@@ -121,14 +121,12 @@ self.addEventListener('notificationclick', (event) => {
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             for (const client of clientList) {
-                if (client.url.includes('acardonag.github.io/zcp') && 'focus' in client) {
+                if ('focus' in client) {
                     client.postMessage({ type: data.type || 'PUSH_CLICK', action, ...data });
                     return client.focus();
                 }
             }
-            return clients.openWindow(
-                `https://acardonag.github.io/zcp/?push=1&type=${data.type || ''}&session=${data.sessionId || ''}`
-            );
+            return clients.openWindow('/?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || ''));
         })
     );
 });
