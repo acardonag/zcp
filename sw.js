@@ -14,7 +14,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // ── Cache ──────────────────────────────────────────────────────
-const CACHE_NAME = 'bbva-app-v12';
+const CACHE_NAME = 'bbva-app-v13';
 const ASSETS = [
     '/zcp/',
     '/zcp/index.html',

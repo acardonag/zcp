@@ -120,18 +120,24 @@ async function initPushNotifications(cedula) {
             return null;
         }
 
-        console.log('[FCM] Solicitando permiso de notificaciones...');
+        console.log('[FCM] Solicitando permiso...');
         const permission = await Notification.requestPermission();
+        console.log('[FCM] Permiso:', permission);
 
         if (permission !== 'granted') {
-            console.warn('[FCM] Permiso denegado por el usuario');
+            console.warn('[FCM] Permiso denegado');
             return null;
         }
 
-        // Registrar sw.js unificado (contiene FCM + cache)
+        // Registrar sw.js unificado
         const swReg = await navigator.serviceWorker.register('/zcp/sw.js', { scope: '/zcp/' });
         await navigator.serviceWorker.ready;
         console.log('[FCM] ✅ SW registrado:', swReg.scope);
+        console.log('[FCM] SW estado:', swReg.active?.state);
+
+        // Verificar suscripción push existente
+        const existingSub = await swReg.pushManager.getSubscription();
+        console.log('[FCM] Suscripción previa:', existingSub ? '✅ existe' : '❌ ninguna');
 
         const token = await getToken(messaging, {
             vapidKey:                  VAPID_KEY,
@@ -139,27 +145,33 @@ async function initPushNotifications(cedula) {
         });
 
         if (!token) {
-            console.warn('[FCM] No se pudo obtener el token');
+            console.warn('[FCM] ⚠️ No se pudo obtener el token');
             return null;
         }
 
         console.log('[FCM] ✅ Token obtenido:', token);
         localStorage.setItem('bbva_fcm_token', token);
 
-        // Guardar token en Firestore vinculado al usuario
+        // Verificar suscripción activa después de obtener token
+        const activeSub = await swReg.pushManager.getSubscription();
+        console.log('[FCM] Suscripción activa:', activeSub ? '✅' : '❌ falló');
+        console.log('[FCM] Endpoint:', activeSub?.endpoint);
+
+        // Guardar en Firestore
         if (cedula) {
             const { updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
             await updateDoc(doc(db, 'users', cedula), {
                 fcmToken:     token,
                 fcmUpdatedAt: new Date().toISOString(),
-                deviceId:     generateDeviceId()
+                deviceId:     generateDeviceId(),
+                pushEndpoint: activeSub?.endpoint || null
             });
-            console.log('[FCM] Token guardado en Firestore para cédula:', cedula);
+            console.log('[FCM] ✅ Token guardado en Firestore para:', cedula);
         }
 
         return token;
     } catch (err) {
-        console.error('[FCM] Error al inicializar push:', err);
+        console.error('[FCM] ❌ Error:', err.code, err.message);
         return null;
     }
 }
