@@ -728,6 +728,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyPIToggleUI(piActive);
             }
 
+            // Actualizar resumen de datos de entrega
+            if (userData?.deliveryData) updateDeliverySummary(userData.deliveryData);
+
             // Restaurar checkboxes desde Firestore
             if (userData?.piSettings) {
                 const pm = userData.piSettings.paymentMethods || {};
@@ -910,6 +913,104 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 4000);
         }
     });
+
+    // ── Modal Datos de entrega ──
+    const deliveryModal = document.getElementById('pi-delivery-modal');
+
+    document.getElementById('pi-delivery-open')?.addEventListener('click', async () => {
+        deliveryModal.style.display = 'flex';
+        if (window.lucide) window.lucide.createIcons();
+        // Cargar datos guardados si hay
+        const cedula = localStorage.getItem('bbva_user_id');
+        if (!cedula) return;
+        if (!window.firebaseReady) {
+            await new Promise(resolve => window.addEventListener('firebase-ready', resolve, { once: true }));
+        }
+        try {
+            const userData = await window.getUserByCedula(cedula);
+            if (userData?.deliveryData) {
+                const d = userData.deliveryData;
+                const setVal = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+                setVal('del-address', d.address);
+                setVal('del-dept',    d.department);
+                setVal('del-city',    d.city);
+                setVal('del-email',   d.email);
+                setVal('del-phone',   d.phone);
+                updateDeliverySummary(d);
+            }
+        } catch (e) {
+            console.error('[delivery] Error cargando datos:', e);
+        }
+    });
+
+    document.getElementById('pi-delivery-close')?.addEventListener('click', () => {
+        deliveryModal.style.display = 'none';
+    });
+    deliveryModal?.addEventListener('click', (e) => {
+        if (e.target === deliveryModal) deliveryModal.style.display = 'none';
+    });
+
+    document.getElementById('pi-delivery-save')?.addEventListener('click', async () => {
+        const address    = document.getElementById('del-address')?.value.trim();
+        const department = document.getElementById('del-dept')?.value.trim();
+        const city       = document.getElementById('del-city')?.value.trim();
+        const email      = document.getElementById('del-email')?.value.trim();
+        const phone      = document.getElementById('del-phone')?.value.trim();
+
+        if (!address || !department || !city || !email || !phone) {
+            const toast = document.getElementById('pi-delivery-toast');
+            if (toast) {
+                toast.style.background = '#FFF0F0';
+                toast.style.borderColor = '#e53935';
+                toast.style.color = '#b71c1c';
+                const icon = toast.querySelector('[data-lucide]');
+                if (icon) { icon.setAttribute('data-lucide', 'alert-circle'); icon.style.color = '#e53935'; window.lucide?.createIcons(); }
+                toast.querySelector('span').textContent = 'Completa todos los campos antes de guardar.';
+                toast.style.display = 'flex';
+                setTimeout(() => { toast.style.display = 'none'; }, 3000);
+            }
+            return;
+        }
+
+        const deliveryData = { address, department, city, email, phone };
+
+        const saveBtn = document.getElementById('pi-delivery-save');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Guardando...';
+
+        try {
+            if (window.firebaseReady && window.updateDeliveryData) {
+                await window.updateDeliveryData(deliveryData);
+            }
+            updateDeliverySummary(deliveryData);
+            const toast = document.getElementById('pi-delivery-toast');
+            if (toast) {
+                toast.style.background = '#E8F5E9';
+                toast.style.borderColor = '#43a047';
+                toast.style.color = '#1B5E20';
+                const icon = toast.querySelector('[data-lucide]');
+                if (icon) { icon.setAttribute('data-lucide', 'check-circle'); icon.style.color = '#2e7d32'; window.lucide?.createIcons(); }
+                toast.querySelector('span').textContent = 'Datos guardados correctamente';
+                toast.style.display = 'flex';
+                setTimeout(() => { toast.style.display = 'none'; }, 2500);
+            }
+        } catch (e) {
+            console.error('[delivery] Error guardando:', e);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Guardar datos';
+        }
+    });
+
+    function updateDeliverySummary(d) {
+        const el = document.getElementById('pi-delivery-summary');
+        if (!el) return;
+        if (d?.city && d?.department) {
+            el.textContent = `${d.city}, ${d.department}`;
+        } else if (d?.address) {
+            el.textContent = d.address.length > 32 ? d.address.slice(0, 32) + '…' : d.address;
+        }
+    }
 
     // ── PI Welcome Modal ──
     function showPIWelcomeModal() {

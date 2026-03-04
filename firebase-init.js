@@ -93,6 +93,20 @@ async function updatePISettings(piSettings) {
     }
 }
 
+async function updateDeliveryData(deliveryData) {
+    const cedula = localStorage.getItem('bbva_user_id');
+    if (!cedula) {
+        console.warn('[updateDeliveryData] No hay cédula en localStorage. Abortando.');
+        return;
+    }
+    try {
+        await updateDoc(doc(db, 'users', cedula), { deliveryData });
+        console.log('✅ deliveryData actualizado en Firestore:', JSON.stringify(deliveryData));
+    } catch (e) {
+        console.error('❌ Error actualizando deliveryData:', e.code, e.message);
+    }
+}
+
 async function registerUserInFirestore(name, cedula, email) {
     const deviceId = generateDeviceId();
 
@@ -372,6 +386,7 @@ window.checkUserExists             = checkUserExists;
 window.getUserByCedula             = getUserByCedula;
 window.updatePagosInteligentes     = updatePagosInteligentes;
 window.updatePISettings            = updatePISettings;
+window.updateDeliveryData          = updateDeliveryData;
 window.initPushNotifications       = initPushNotifications;
 window.createUserFinancialData     = createUserFinancialData;
 window.getUserAccount              = getUserAccount;
