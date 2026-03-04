@@ -130,46 +130,49 @@ async function registerUserInFirestore(name, cedula, email) {
 
 /**
  * Crea los datos financieros (cuenta + tarjeta) al registrar un usuario.
- * accountId    = últimos 3 dígitos de la cédula
- * creditCardId = primeros 3 dígitos de la cédula
+ * accountId    = timestamp_1  (e.g. "1741036812345_1")
+ * creditCardId = timestamp_2  (e.g. "1741036812345_2")
+ * Display      = últimos 4 dígitos del timestamp (antes del "_")
  */
 async function createUserFinancialData(cedula) {
     try {
-        const accountId    = cedula.slice(-3);
-        const creditCardId = cedula.slice(0, 3);
+        const ts           = Date.now().toString();
+        const accountId    = `${ts}_1`;
+        const creditCardId = `${ts}_2`;
+
+        // Últimos 4 dígitos del timestamp para mostrar al usuario
+        const accountDisplay = ts.slice(-4);
+        const cardDisplay    = ts.slice(-4);
 
         const accountRef = doc(db, 'accounts', accountId);
         const cardRef    = doc(db, 'creditCards', creditCardId);
 
-        const [accountSnap, cardSnap] = await Promise.all([getDoc(accountRef), getDoc(cardRef)]);
+        await setDoc(accountRef, {
+            cedula,
+            accountId,
+            accountNumber: `COL-${accountDisplay}-BBVA`,
+            type:          'Cuenta de Ahorros',
+            balance:       12000000,
+            currency:      'COP',
+            createdAt:     new Date().toISOString()
+        });
+        console.log('✅ Cuenta de ahorros creada:', accountId);
 
-        if (!accountSnap.exists()) {
-            await setDoc(accountRef, {
-                cedula,
-                accountId,
-                accountNumber: `COL-${accountId}-BBVA`,
-                type:          'Cuenta de Ahorros',
-                balance:       12000000,
-                currency:      'COP',
-                createdAt:     new Date().toISOString()
-            });
-            console.log('✅ Cuenta de ahorros creada:', accountId);
-        }
+        await setDoc(cardRef, {
+            cedula,
+            creditCardId,
+            cardNumber:       `**** **** **** ${cardDisplay}`,
+            type:             'Tarjeta de Crédito',
+            brand:            'Visa',
+            availableBalance: 4000000,
+            totalLimit:       4000000,
+            currency:         'COP',
+            createdAt:        new Date().toISOString()
+        });
+        console.log('✅ Tarjeta de crédito creada:', creditCardId);
 
-        if (!cardSnap.exists()) {
-            await setDoc(cardRef, {
-                cedula,
-                creditCardId,
-                cardNumber:       `**** **** **** ${creditCardId}0`,
-                type:             'Tarjeta de Crédito',
-                brand:            'Visa',
-                availableBalance: 4000000,
-                totalLimit:       4000000,
-                currency:         'COP',
-                createdAt:        new Date().toISOString()
-            });
-            console.log('✅ Tarjeta de crédito creada:', creditCardId);
-        }
+        // Guardar los IDs en el documento del usuario para poder recuperarlos
+        await updateDoc(doc(db, 'users', cedula), { accountId, creditCardId });
 
         return { accountId, creditCardId };
     } catch (err) {
@@ -181,7 +184,11 @@ async function createUserFinancialData(cedula) {
 /** Obtiene la cuenta de ahorros del usuario */
 async function getUserAccount(cedula) {
     try {
-        const snap = await getDoc(doc(db, 'accounts', cedula.slice(-3)));
+        const userSnap = await getDoc(doc(db, 'users', cedula));
+        if (!userSnap.exists()) return null;
+        const accountId = userSnap.data().accountId;
+        if (!accountId) return null;
+        const snap = await getDoc(doc(db, 'accounts', accountId));
         return snap.exists() ? snap.data() : null;
     } catch (err) {
         console.error('❌ Error obteniendo cuenta:', err);
@@ -192,7 +199,11 @@ async function getUserAccount(cedula) {
 /** Obtiene la tarjeta de crédito del usuario */
 async function getUserCreditCard(cedula) {
     try {
-        const snap = await getDoc(doc(db, 'creditCards', cedula.slice(0, 3)));
+        const userSnap = await getDoc(doc(db, 'users', cedula));
+        if (!userSnap.exists()) return null;
+        const creditCardId = userSnap.data().creditCardId;
+        if (!creditCardId) return null;
+        const snap = await getDoc(doc(db, 'creditCards', creditCardId));
         return snap.exists() ? snap.data() : null;
     } catch (err) {
         console.error('❌ Error obteniendo tarjeta:', err);
@@ -208,8 +219,14 @@ async function getUserCreditCard(cedula) {
  * @returns {{ newBalance: number }}
  */
 async function deductPayment(cedula, amount, source = 'account') {
+    // Obtener los IDs desde el documento del usuario
+    const userSnap = await getDoc(doc(db, 'users', cedula));
+    if (!userSnap.exists()) throw new Error('Usuario no encontrado');
+    const userData = userSnap.data();
+
     if (source === 'account') {
-        const accountRef  = doc(db, 'accounts', cedula.slice(-3));
+        if (!userData.accountId) throw new Error('ID de cuenta no encontrado');
+        const accountRef  = doc(db, 'accounts', userData.accountId);
         const accountSnap = await getDoc(accountRef);
         if (!accountSnap.exists()) throw new Error('Cuenta no encontrada');
         const current = accountSnap.data().balance;
@@ -225,7 +242,8 @@ async function deductPayment(cedula, amount, source = 'account') {
     }
 
     if (source === 'card') {
-        const cardRef  = doc(db, 'creditCards', cedula.slice(0, 3));
+        if (!userData.creditCardId) throw new Error('ID de tarjeta no encontrado');
+        const cardRef  = doc(db, 'creditCards', userData.creditCardId);
         const cardSnap = await getDoc(cardRef);
         if (!cardSnap.exists()) throw new Error('Tarjeta no encontrada');
         const current = cardSnap.data().availableBalance;
