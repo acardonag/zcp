@@ -173,6 +173,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let hasError = false;
         if (!name)   { document.getElementById('reg-name').classList.add('input-error');  hasError = true; }
         if (!cedula) { document.getElementById('reg-id').classList.add('input-error');    hasError = true; }
+        if (cedula && !/^\d+$/.test(cedula)) {
+            document.getElementById('reg-id').classList.add('input-error');
+            hasError = true;
+        }
         if (!email)  { document.getElementById('reg-email').classList.add('input-error'); hasError = true; }
         if (hasError) return;
 
@@ -222,8 +226,13 @@ document.addEventListener('DOMContentLoaded', () => {
             await window.registerUserInFirestore(name, cedula, email);
 
             // Crear cuenta de ahorros y tarjeta de crédito
+            // Error aislado: si falla no aborta el registro (el usuario ya quedó guardado)
             if (window.createUserFinancialData) {
-                await window.createUserFinancialData(cedula);
+                try {
+                    await window.createUserFinancialData(cedula);
+                } catch (finErr) {
+                    console.warn('⚠️ Datos financieros no creados (se reintentará al login):', finErr.message);
+                }
             }
 
             state.userName = name;

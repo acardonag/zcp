@@ -172,7 +172,9 @@ async function createUserFinancialData(cedula) {
         console.log('✅ Tarjeta de crédito creada:', creditCardId);
 
         // Guardar los IDs en el documento del usuario para poder recuperarlos
-        await updateDoc(doc(db, 'users', cedula), { accountId, creditCardId });
+        // setDoc con merge:true funciona tanto si el doc existe como si no
+        await setDoc(doc(db, 'users', cedula), { accountId, creditCardId }, { merge: true });
+        console.log('✅ IDs guardados en users/' + cedula);
 
         return { accountId, creditCardId };
     } catch (err) {
