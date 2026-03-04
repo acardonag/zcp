@@ -52,6 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const cedula = localStorage.getItem('bbva_user_id');
         if (!cedula) return;
 
+        // Activar skeleton en los 3 elementos
+        const balanceEl    = document.getElementById('account-balance');
+        const cardBalanceEl= document.getElementById('card-available-balance');
+        const cardNumEl    = document.getElementById('card-number-display');
+        [balanceEl, cardBalanceEl, cardNumEl].forEach(el => el?.classList.add('skeleton'));
+
         // Esperar a Firebase si no está listo aún
         if (!window.firebaseReady) {
             await new Promise((resolve, reject) => {
@@ -67,20 +73,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.getUserCreditCard(cedula)
             ]);
 
-            if (account) {
-                const balanceEl = document.getElementById('account-balance');
-                if (balanceEl) {
-                    balanceEl.innerHTML = `${formatCurrency(account.balance)} <span class="balance-currency">COP</span>`;
-                }
+            if (account && balanceEl) {
+                balanceEl.classList.remove('skeleton');
+                balanceEl.innerHTML = `${formatCurrency(account.balance)} <span class="balance-currency">COP</span>`;
             }
             if (card) {
-                const cardBalanceEl = document.getElementById('card-available-balance');
-                const cardNumEl     = document.getElementById('card-number-display');
-                if (cardBalanceEl) cardBalanceEl.textContent = formatCurrency(card.availableBalance);
-                if (cardNumEl)     cardNumEl.textContent     = card.cardNumber;
+                if (cardBalanceEl) {
+                    cardBalanceEl.classList.remove('skeleton');
+                    cardBalanceEl.textContent = formatCurrency(card.availableBalance);
+                }
+                if (cardNumEl) {
+                    cardNumEl.classList.remove('skeleton');
+                    cardNumEl.textContent = card.cardNumber;
+                }
             }
         } catch (err) {
             console.error('❌ Error cargando saldos:', err);
+            // Quitar skeleton aunque falle
+            [balanceEl, cardBalanceEl, cardNumEl].forEach(el => el?.classList.remove('skeleton'));
         }
     }
 
@@ -655,6 +665,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const cedula = localStorage.getItem('bbva_user_id');
         if (!cedula) return;
 
+        // Activar skeleton en los subtítulos de medios de pago
+        const piAccountEl = document.getElementById('pi-pm-account-num');
+        const piCardEl    = document.getElementById('pi-pm-card-num');
+        [piAccountEl, piCardEl].forEach(el => el?.classList.add('skeleton'));
+
         if (!window.firebaseReady) {
             await new Promise(resolve => window.addEventListener('firebase-ready', resolve, { once: true }));
         }
@@ -667,13 +682,13 @@ document.addEventListener('DOMContentLoaded', () => {
             ]);
 
             // Mostrar números de cuenta y tarjeta
-            if (account) {
-                const el = document.getElementById('pi-pm-account-num');
-                if (el) el.textContent = account.accountNumber;
+            if (piAccountEl) {
+                piAccountEl.classList.remove('skeleton');
+                piAccountEl.textContent = account?.accountNumber || '—';
             }
-            if (card) {
-                const el = document.getElementById('pi-pm-card-num');
-                if (el) el.textContent = card.cardNumber;
+            if (piCardEl) {
+                piCardEl.classList.remove('skeleton');
+                piCardEl.textContent = card?.cardNumber || '—';
             }
 
             // Restaurar checkboxes desde Firestore
@@ -693,6 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.error('[PI] Error cargando datos de pantalla PI:', err);
+            [piAccountEl, piCardEl].forEach(el => el?.classList.remove('skeleton'));
         }
     }
 

@@ -128,6 +128,36 @@
             color: #b71c1c;
         }
         .pi-toast-error i { color: #e53935; }
+
+        /* ── Skeleton shimmer ── */
+        .skeleton {
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+            background: #e8edf2;
+            border-radius: 6px;
+            color: transparent !important;
+            pointer-events: none;
+            min-width: 80px;
+            min-height: 1em;
+        }
+        .skeleton::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+        @keyframes shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position:  200% 0; }
+        }
+        /* Balance principal más alto */
+        #account-balance.skeleton { min-width: 160px; min-height: 1.6em; border-radius: 8px; }
+        #card-available-balance.skeleton { min-width: 100px; }
+        #card-number-display.skeleton { min-width: 130px; }
+        .pi-check-sub.skeleton { min-width: 110px; }
     </style>
 
     <!-- Firebase SDK -->
@@ -266,7 +296,7 @@
                     </div>
                     <div class="balance-section">
                         <h3>SALDO TOTAL EN TU CUENTA DE AHORROS</h3>
-                        <div class="balance-amount" id="account-balance">$ 12.000.000 <span class="balance-currency">COP</span></div>
+                        <div class="balance-amount skeleton" id="account-balance"></div>
                     </div>
                 </div>
 
@@ -278,14 +308,14 @@
                                 <i data-lucide="credit-card" style="color: var(--bbva-light-blue); width:20px; height:20px;"></i>
                                 <div>
                                     <span class="card-type">Visa Platinum</span>
-                                    <span class="card-number" id="card-number-display">Cargando...</span>
+                                    <span class="card-number skeleton" id="card-number-display"></span>
                                 </div>
                             </div>
                             <span class="card-brand">VISA</span>
                         </div>
                         <div class="card-balance">
                             <p class="available-limit">Cupo disponible</p>
-                            <p class="limit-amount" id="card-available-balance">$ 4.000.000</p>
+                            <p class="limit-amount skeleton" id="card-available-balance"></p>
                         </div>
                         <div class="card-action">
                             <span>Pagar tarjeta</span>
