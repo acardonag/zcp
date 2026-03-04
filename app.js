@@ -117,8 +117,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Welcome Screen ──
     document.getElementById('to-register')?.addEventListener('click', () => {
+        // Limpiar campos del formulario
+        document.getElementById('reg-name').value  = '';
+        document.getElementById('reg-id').value    = '';
+        document.getElementById('reg-email').value = '';
+        // Ocultar hint y toast
         const hint = document.getElementById('register-hint');
         if (hint) hint.style.display = 'none';
+        const toast = document.getElementById('reg-toast');
+        if (toast) { toast.classList.add('pi-toast-hidden'); toast.classList.remove('pi-toast-visible'); }
         showScreen('register-screen');
     });
     document.getElementById('to-login')?.addEventListener('click', () => {
