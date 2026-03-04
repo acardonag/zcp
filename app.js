@@ -670,6 +670,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const piCardEl    = document.getElementById('pi-pm-card-num');
         [piAccountEl, piCardEl].forEach(el => el?.classList.add('skeleton'));
 
+        // Bloquear visualmente las secciones completas hasta tener datos reales
+        const pmSection = document.getElementById('pi-payment-methods-section');
+        const chSection = document.getElementById('pi-channels-section');
+        [pmSection, chSection].forEach(el => el?.classList.add('pi-section-loading'));
+
         if (!window.firebaseReady) {
             await new Promise(resolve => window.addEventListener('firebase-ready', resolve, { once: true }));
         }
@@ -709,6 +714,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('[PI] Error cargando datos de pantalla PI:', err);
             [piAccountEl, piCardEl].forEach(el => el?.classList.remove('skeleton'));
+        } finally {
+            // Siempre quitar el bloqueo al terminar (con o sin error)
+            [pmSection, chSection].forEach(el => el?.classList.remove('pi-section-loading'));
         }
     }
 

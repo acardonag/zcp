@@ -158,6 +158,20 @@
         #card-available-balance.skeleton { min-width: 100px; }
         #card-number-display.skeleton { min-width: 130px; }
         .pi-check-sub.skeleton { min-width: 110px; }
+
+        /* ── PI sections: estado cargando ── */
+        .pi-section-loading {
+            position: relative;
+            pointer-events: none;
+        }
+        .pi-section-loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.65);
+            border-radius: inherit;
+            z-index: 2;
+        }
     </style>
 
     <!-- Firebase SDK -->
