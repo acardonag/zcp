@@ -797,15 +797,22 @@
                 let newBalance;
                 try {
                     const cedula = localStorage.getItem('bbva_user_id');
-                    if (cedula && window.deductPayment) {
-                        const source        = params.get('source') || 'account';
-                        const numericAmount = parseInt(rawAmount.replace(/\D/g, ''), 10);
-                        const result        = await window.deductPayment(cedula, numericAmount, source);
-                        newBalance          = result.newBalance;
-                        console.log('✅ Pago debitado. Nuevo saldo:', newBalance);
-                    } else {
-                        console.warn('⚠️ deductPayment no disponible (Firebase aún no listo)');
-                    }
+                    if (!cedula) throw new Error('No hay usuario en sesión');
+                    // Esperar a que Firebase esté listo (polling hasta 5 s)
+                    const deduct = await new Promise((resolve, reject) => {
+                        if (typeof window.deductPayment === 'function') { resolve(window.deductPayment); return; }
+                        let attempts = 0;
+                        const iv = setInterval(() => {
+                            attempts++;
+                            if (typeof window.deductPayment === 'function') { clearInterval(iv); resolve(window.deductPayment); }
+                            else if (attempts >= 25) { clearInterval(iv); reject(new Error('Firebase no disponible después de 5 s')); }
+                        }, 200);
+                    });
+                    const source        = params.get('source') || 'account';
+                    const numericAmount = parseInt(rawAmount.replace(/\D/g, ''), 10);
+                    const result        = await deduct(cedula, numericAmount, source);
+                    newBalance          = result.newBalance;
+                    console.log('✅ Pago debitado. Nuevo saldo:', newBalance);
                 } catch (err) {
                     console.error('❌ Error debitando pago:', err.message);
                 }

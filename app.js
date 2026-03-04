@@ -661,6 +661,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ── Estado del botón Datos de entrega según PI activo/inactivo ──
+    function setDeliveryBtnState(isActive) {
+        const btn = document.getElementById('pi-delivery-open');
+        if (!btn) return;
+        btn.disabled      = !isActive;
+        btn.style.opacity = isActive ? '1'         : '0.45';
+        btn.style.cursor  = isActive ? 'pointer'   : 'not-allowed';
+    }
+
     // ── Acordeón: expandir/colapsar features ──
     document.getElementById('pi-features-toggle')?.addEventListener('click', () => {
         const featBody = document.getElementById('pi-features-body');
@@ -682,6 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reaccionar al cambio del toggle en tiempo real
     piToggle?.addEventListener('change', () => {
         applyPIToggleUI(piToggle.checked);
+        setDeliveryBtnState(piToggle.checked);
     });
 
     // ── Cargar datos de cuenta/tarjeta y settings PI desde Firestore ──
@@ -726,6 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (piToggle) piToggle.checked = piActive;
                 localStorage.setItem(PI_KEY, piActive ? 'true' : 'false');
                 applyPIToggleUI(piActive);
+                setDeliveryBtnState(piActive);
             }
 
             // Actualizar resumen de datos de entrega

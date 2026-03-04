@@ -637,6 +637,22 @@
                     </label>
                 </div>
 
+                <!-- Datos de entrega -->
+                <div class="pi-card">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <div class="pi-check-icon-wrap" style="background:#F0F5FF;flex-shrink:0;">
+                                <i data-lucide="map-pin" style="width:18px;height:18px;color:#004481;"></i>
+                            </div>
+                            <div>
+                                <p style="font-size:14px;font-weight:600;color:var(--bbva-navy);margin:0 0 2px;">Datos de entrega</p>
+                                <p style="font-size:11px;color:#999;margin:0;" id="pi-delivery-summary">Sin configurar</p>
+                            </div>
+                        </div>
+                        <button id="pi-delivery-open" disabled style="opacity:0.45;cursor:not-allowed;background:var(--bbva-navy);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;">Configurar</button>
+                    </div>
+                </div>
+
                 <!-- Features (acordeón cuando PI activo, normal cuando inactivo) -->
                 <div class="pi-card" id="pi-features-card">
                     <!-- Header acordeón (visible solo cuando PI está activo) -->
@@ -684,22 +700,6 @@
                                 <p class="pi-feature-desc">Accede a los comercios donde siempre compras de forma más ágil. Menos pasos, misma seguridad, mejor experiencia.</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Datos de entrega -->
-                <div class="pi-card">
-                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                            <div class="pi-check-icon-wrap" style="background:#F0F5FF;flex-shrink:0;">
-                                <i data-lucide="map-pin" style="width:18px;height:18px;color:#004481;"></i>
-                            </div>
-                            <div>
-                                <p style="font-size:14px;font-weight:600;color:var(--bbva-navy);margin:0 0 2px;">Datos de entrega</p>
-                                <p style="font-size:11px;color:#999;margin:0;" id="pi-delivery-summary">Sin configurar</p>
-                            </div>
-                        </div>
-                        <button id="pi-delivery-open" style="background:var(--bbva-navy);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">Configurar</button>
                     </div>
                 </div>
 
