@@ -78,6 +78,21 @@ async function updatePagosInteligentes(isActive) {
     }
 }
 
+// Guarda los medios de pago y canales autorizados para Pagos Inteligentes
+async function updatePISettings(piSettings) {
+    const cedula = localStorage.getItem('bbva_user_id');
+    if (!cedula) {
+        console.warn('[updatePISettings] No hay cédula en localStorage. Abortando.');
+        return;
+    }
+    try {
+        await updateDoc(doc(db, 'users', cedula), { piSettings });
+        console.log('✅ piSettings actualizado en Firestore:', JSON.stringify(piSettings));
+    } catch (e) {
+        console.error('❌ Error actualizando piSettings:', e.code, e.message);
+    }
+}
+
 async function registerUserInFirestore(name, cedula, email) {
     const deviceId = generateDeviceId();
 
@@ -335,6 +350,7 @@ window.registerUserInFirestore     = registerUserInFirestore;
 window.checkUserExists             = checkUserExists;
 window.getUserByCedula             = getUserByCedula;
 window.updatePagosInteligentes     = updatePagosInteligentes;
+window.updatePISettings            = updatePISettings;
 window.initPushNotifications       = initPushNotifications;
 window.createUserFinancialData     = createUserFinancialData;
 window.getUserAccount              = getUserAccount;

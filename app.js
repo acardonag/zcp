@@ -578,20 +578,112 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('welcome-screen');
     });
     // ── Pagos Inteligentes ──
-    const PI_KEY = 'bbva_pagos_inteligentes';
-    const piToggle = document.getElementById('pi-toggle');
-    const piToast = document.getElementById('pi-toast');
+    const PI_KEY    = 'bbva_pagos_inteligentes';
+    const piToggle  = document.getElementById('pi-toggle');
+    const piToast   = document.getElementById('pi-toast');
     const piToastMsg = document.getElementById('pi-toast-msg');
 
-    // Cargar estado guardado
+    // ── Muestra/oculta secciones PI según estado del toggle ──
+    function applyPIToggleUI(isActive) {
+        const pmSection  = document.getElementById('pi-payment-methods-section');
+        const chSection  = document.getElementById('pi-channels-section');
+        const accHeader  = document.getElementById('pi-features-toggle');
+        const labelStatic = document.getElementById('pi-features-label-static');
+        const featBody   = document.getElementById('pi-features-body');
+        const chevron    = document.getElementById('pi-features-chevron');
+
+        // Medios de pago y canales: solo visibles con PI activo
+        if (pmSection)   pmSection.style.display   = isActive ? 'block' : 'none';
+        if (chSection)   chSection.style.display   = isActive ? 'block' : 'none';
+
+        // Sección de features
+        if (isActive) {
+            // Acordeón colapsado por defecto cuando PI está activo
+            if (accHeader)   { accHeader.style.display   = 'flex'; }
+            if (labelStatic) { labelStatic.style.display = 'none'; }
+            if (featBody)    { featBody.style.display    = 'none'; }
+            if (chevron)     { chevron.style.transform   = 'rotate(0deg)'; }
+        } else {
+            // Normal (expandido) cuando PI está inactivo
+            if (accHeader)   { accHeader.style.display   = 'none'; }
+            if (labelStatic) { labelStatic.style.display = 'block'; }
+            if (featBody)    { featBody.style.display    = 'block'; }
+        }
+    }
+
+    // ── Acordeón: expandir/colapsar features ──
+    document.getElementById('pi-features-toggle')?.addEventListener('click', () => {
+        const featBody = document.getElementById('pi-features-body');
+        const chevron  = document.getElementById('pi-features-chevron');
+        if (!featBody) return;
+        const isOpen = featBody.style.display !== 'none';
+        featBody.style.display = isOpen ? 'none' : 'block';
+        if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        if (window.lucide) window.lucide.createIcons();
+    });
+
+    // Cargar estado guardado y aplicar UI inicial
     const savedPI = localStorage.getItem(PI_KEY);
     if (piToggle && savedPI !== null) {
         piToggle.checked = savedPI === 'true';
+    }
+    applyPIToggleUI(savedPI === 'true');
+
+    // Reaccionar al cambio del toggle en tiempo real
+    piToggle?.addEventListener('change', () => {
+        applyPIToggleUI(piToggle.checked);
+    });
+
+    // ── Cargar datos de cuenta/tarjeta y settings PI desde Firestore ──
+    async function loadPIScreenData() {
+        const cedula = localStorage.getItem('bbva_user_id');
+        if (!cedula) return;
+
+        if (!window.firebaseReady) {
+            await new Promise(resolve => window.addEventListener('firebase-ready', resolve, { once: true }));
+        }
+
+        try {
+            const [account, card, userData] = await Promise.all([
+                window.getUserAccount    ? window.getUserAccount(cedula)    : null,
+                window.getUserCreditCard ? window.getUserCreditCard(cedula) : null,
+                window.getUserByCedula   ? window.getUserByCedula(cedula)   : null
+            ]);
+
+            // Mostrar números de cuenta y tarjeta
+            if (account) {
+                const el = document.getElementById('pi-pm-account-num');
+                if (el) el.textContent = account.accountNumber;
+            }
+            if (card) {
+                const el = document.getElementById('pi-pm-card-num');
+                if (el) el.textContent = card.cardNumber;
+            }
+
+            // Restaurar checkboxes desde Firestore
+            if (userData?.piSettings) {
+                const pm = userData.piSettings.paymentMethods || {};
+                const ch = userData.piSettings.channels       || {};
+                const set = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.checked = !!val;
+                };
+                set('pi-pm-account',  pm.account);
+                set('pi-pm-card',     pm.card);
+                set('pi-ch-whatsapp', ch.whatsapp);
+                set('pi-ch-telegram', ch.telegram);
+                set('pi-ch-alexa',    ch.alexa);
+                set('pi-ch-chats',    ch.chats);
+            }
+        } catch (err) {
+            console.error('[PI] Error cargando datos de pantalla PI:', err);
+        }
     }
 
     // Navegar a Pagos Inteligentes desde el banner
     document.getElementById('promo-banner-btn')?.addEventListener('click', () => {
         showScreen('pagos-inteligentes-screen');
+        loadPIScreenData();
     });
 
     // Volver al dashboard
@@ -603,16 +695,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guardar configuración
     document.getElementById('pi-save')?.addEventListener('click', async () => {
         const isActive = piToggle?.checked ?? false;
-        console.log('[pi-save] Guardando configuración. isActive:', isActive);
-        console.log('[pi-save] firebaseReady:', window.firebaseReady, '| updatePagosInteligentes:', typeof window.updatePagosInteligentes);
-        console.log('[pi-save] cédula en localStorage:', localStorage.getItem('bbva_user_id'));
+        console.log('[pi-save] Guardando. isActive:', isActive);
         localStorage.setItem(PI_KEY, isActive);
 
-        // Sincronizar con Firestore si Firebase está listo
-        if (window.firebaseReady && window.updatePagosInteligentes) {
-            await window.updatePagosInteligentes(isActive);
+        // Recopilar medios de pago y canales autorizados
+        const piSettings = {
+            paymentMethods: {
+                account: document.getElementById('pi-pm-account')?.checked  ?? false,
+                card:    document.getElementById('pi-pm-card')?.checked     ?? false
+            },
+            channels: {
+                whatsapp: document.getElementById('pi-ch-whatsapp')?.checked ?? false,
+                telegram: document.getElementById('pi-ch-telegram')?.checked ?? false,
+                alexa:    document.getElementById('pi-ch-alexa')?.checked    ?? false,
+                chats:    document.getElementById('pi-ch-chats')?.checked    ?? false
+            }
+        };
+
+        if (window.firebaseReady) {
+            if (window.updatePagosInteligentes) await window.updatePagosInteligentes(isActive);
+            if (window.updatePISettings)        await window.updatePISettings(piSettings);
         } else {
-            console.warn('[pi-save] Firebase no disponible, solo guardado en localStorage.');
+            console.warn('[pi-save] Firebase no disponible, solo guardado local.');
         }
 
         const msg = isActive
