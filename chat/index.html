@@ -639,9 +639,9 @@
 
         try {
             const payload = {
-                message: text,
-                userId:  localStorage.getItem('bbva_user_id') || 'anonymous',
-                userName: localStorage.getItem('bbva_user')   || 'Usuario',
+                message:  { text },
+                userId:   localStorage.getItem('bbva_user_id') || 'anonymous',
+                userName: localStorage.getItem('bbva_user')    || 'Usuario',
                 timestamp: new Date().toISOString()
             };
 
