@@ -120,7 +120,8 @@ messaging.onBackgroundMessage((payload) => {
         data: {
             type:      data.type      || '',
             cedula:    data.cedula    || '',
-            sessionId: data.sessionId || ''
+            sessionId: data.sessionId || '',
+            userName:  data.userName  || ''
         },
         actions
     });
@@ -137,7 +138,7 @@ self.addEventListener('notificationclick', (event) => {
     const base = self.registration.scope; // ej: https://acardonag.github.io/zcp/
     let targetUrl;
     if (data.type === 'AUTH_REQUEST') {
-        targetUrl = base + '?auth=1&cedula=' + encodeURIComponent(data.cedula || '') + '&sessionId=' + encodeURIComponent(data.sessionId || '');
+        targetUrl = base + '?auth=1&cedula=' + encodeURIComponent(data.cedula || '') + '&sessionId=' + encodeURIComponent(data.sessionId || '') + '&userName=' + encodeURIComponent(data.userName || '');
     } else {
         targetUrl = base + '?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || '');
     }

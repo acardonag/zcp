@@ -112,11 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (urlParams.get('auth') === '1') {
         const cedula    = urlParams.get('cedula')    || '';
         const sessionId = urlParams.get('sessionId') || '';
-        console.log('[url-params] 🔔 Push deep link detectado. Cédula:', cedula, '| SessionId:', sessionId);
+        const userName  = urlParams.get('userName')  || '';
+        console.log('[url-params] 🔔 Push deep link detectado. Cédula:', cedula, '| SessionId:', sessionId, '| UserName:', userName);
         history.replaceState({}, '', window.location.pathname);
         if (cedula) {
             sessionStorage.setItem('bbva_auth_from_push', '1');
             if (sessionId) sessionStorage.setItem('bbva_push_session_id', sessionId);
+            if (userName)  sessionStorage.setItem('bbva_push_user_name',  userName);
             // Esperar tanto al DOM como a Firebase antes de ejecutar
             const doAuth = async () => {
                 console.log('[url-params] Ejecutando triggerAuthFromPush para:', cedula);
@@ -572,13 +574,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ── Notificar a n8n que la autenticación biométrica fue exitosa ──
                 (async () => {
                     const pushSessionId = sessionStorage.getItem('bbva_push_session_id') || '';
+                    const pushUserName  = sessionStorage.getItem('bbva_push_user_name')  || localStorage.getItem('bbva_user') || '';
                     sessionStorage.removeItem('bbva_push_session_id');
+                    sessionStorage.removeItem('bbva_push_user_name');
                     if (pushSessionId) {
                         try {
                             const formData = new URLSearchParams();
                             formData.append('status',    'APROBADO');
                             formData.append('sessionId', pushSessionId);
                             formData.append('cedula',    localStorage.getItem('bbva_user_id') || '');
+                            formData.append('userName',  pushUserName);
                             formData.append('mensaje',   'Autenticación biométrica exitosa en BBVA.');
                             const n8nUrls = [
                                 'https://nuketownlabs-n8n.ko2m0t.easypanel.host/webhook-test/pago-confirmado',
