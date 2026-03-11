@@ -312,6 +312,54 @@
             padding: 8px;
         }
 
+        /* ── Spinner Procesando ── */
+        .processing-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(2px);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .processing-card {
+            background: white;
+            border-radius: var(--border-radius-md);
+            padding: 36px 32px;
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            min-width: 220px;
+        }
+        .processing-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e0e7ef;
+            border-top-color: var(--bbva-navy);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .processing-text {
+            color: var(--bbva-navy);
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .processing-sub {
+            color: #aaa;
+            font-size: 12px;
+            margin: 0;
+        }
+
         /* ── Pantalla Recibo ── */
         #receipt-screen {
             background: white;
@@ -725,6 +773,15 @@
         </section>
 
         <!-- BIOMETRIC MODAL -->
+        <!-- Spinner Procesando -->
+        <div class="processing-overlay" id="processing-overlay">
+            <div class="processing-card">
+                <div class="processing-spinner"></div>
+                <p class="processing-text">Procesando pago…</p>
+                <p class="processing-sub">Por favor no cierres esta pantalla</p>
+            </div>
+        </div>
+
         <div class="bio-overlay" id="bio-modal">
             <div class="bio-card">
                 <div class="bbva-logo" style="font-size:20px;margin-bottom:16px;">BBVA</div>
@@ -877,6 +934,10 @@
                 bioModal.style.display = 'none';
                 if (svg) { svg.style.color = ''; svg.style.stroke = ''; }
 
+                // Mostrar spinner mientras se procesa
+                const processingOverlay = document.getElementById('processing-overlay');
+                processingOverlay.style.display = 'flex';
+
                 const source       = selectedPaymentMethod || params.get('source') || 'account';
                 const paymentLabel = source === 'card' ? 'Tarjeta de Crédito BBVA' : 'Cuenta de Ahorros BBVA';
 
@@ -913,6 +974,8 @@
                     } catch (e) { console.error('❌ Error notificando a n8n:', e.message); }
                 }
 
+                // Ocultar spinner y mostrar recibo
+                processingOverlay.style.display = 'none';
                 showReceipt(newBalance, paymentLabel);
             }, 1200);
         });
