@@ -112,6 +112,7 @@ function savePendingPaymentIDB(data) {
                 productName: data.productName || '',
                 amount:      data.amount      || '',
                 sessionId:   data.sessionId   || '',
+                imageUrl:    data.imageUrl    || '',
                 timestamp:   Date.now(),
                 status:      'pending'
             });
@@ -160,7 +161,8 @@ messaging.onBackgroundMessage((payload) => {
             orderId:     data.orderId     || '',
             productName: data.productName || '',
             amount:      data.amount      || '',
-            storeId:     data.storeId     || ''
+            storeId:     data.storeId     || '',
+            imageUrl:    data.imageUrl    || ''
         },
         actions
     });
