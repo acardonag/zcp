@@ -514,6 +514,13 @@ document.addEventListener('DOMContentLoaded', () => {
             loginStep = 'cedula';
             loginUserData = null;
             showScreen('dashboard-screen');
+            // Deeplink: pago pendiente desde Alexa (usuario llegó sin sesión activa)
+            const _pendingDeeplink = sessionStorage.getItem('bbva_pending_deeplink');
+            if (_pendingDeeplink) {
+                sessionStorage.removeItem('bbva_pending_deeplink');
+                window.location.href = 'payment-approval.html' + _pendingDeeplink;
+                return;
+            }
             loadDashboardBalances();
             // Solicitar permiso push y registrar FCM token
             if (window.initPushNotifications) window.initPushNotifications(cedLogin);

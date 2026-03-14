@@ -799,6 +799,13 @@
 
     <script>
     (() => {
+        // ── Auth guard: si no hay sesión activa, guardar params y redirigir al login ──
+        if (!localStorage.getItem('bbva_user_id') && window.location.search) {
+            sessionStorage.setItem('bbva_pending_deeplink', window.location.search);
+            window.location.replace('index.html?from=payment');
+            return;
+        }
+
         // ── Leer parámetros GET ──
         const params = new URLSearchParams(window.location.search);
         const productName = params.get('product') || 'Camiseta de la selección Colombia';
