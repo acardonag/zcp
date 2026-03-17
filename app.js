@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
             target.classList.add('active');
             if (window.lucide) window.lucide.createIcons();
         }
-        // Mostrar/ocultar FAB de chat según pantalla activa
-        const fab = document.getElementById('fab-chat-btn');
-        if (fab) fab.style.display = (screenId === 'dashboard-screen' && localStorage.getItem('bbva_chats_enabled') === 'true') ? 'flex' : 'none';
+        // Mostrar/ocultar chat-messenger según pantalla activa y canal habilitado
+        const chatWrapper = document.getElementById('chat-messenger-wrapper');
+        if (chatWrapper) chatWrapper.style.display = (screenId === 'dashboard-screen' && localStorage.getItem('bbva_chats_enabled') === 'true') ? 'block' : 'none';
     };
 
     // ── Login state (declarado al inicio para evitar TDZ en triggerAuthFromPush) ──
@@ -77,11 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.getUserByCedula ? window.getUserByCedula(cedula) : Promise.resolve(null)
             ]);
 
-            // Sincronizar visibilidad del FAB de chat con la config de canales PI
+            // Sincronizar visibilidad del chat-messenger con la config de canales PI
             const chatsEnabled = !!userData?.piSettings?.channels?.chats;
             localStorage.setItem('bbva_chats_enabled', chatsEnabled ? 'true' : 'false');
-            const fabEl = document.getElementById('fab-chat-btn');
-            if (fabEl) fabEl.style.display = chatsEnabled ? 'flex' : 'none';
+            const chatWrapper = document.getElementById('chat-messenger-wrapper');
+            if (chatWrapper) chatWrapper.style.display = chatsEnabled ? 'block' : 'none';
 
             if (account && balanceEl) {
                 balanceEl.classList.remove('skeleton');
@@ -969,12 +969,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 set('pi-ch-telegram', ch.telegram);
                 set('pi-ch-alexa',    ch.alexa);
                 set('pi-ch-chats',    ch.chats);
-                // Sincronizar FAB de chat con la config guardada
+                // Sincronizar chat-messenger con la config guardada
                 const chatsOn = !!ch.chats;
                 localStorage.setItem('bbva_chats_enabled', chatsOn ? 'true' : 'false');
-                const fabSync = document.getElementById('fab-chat-btn');
-                if (fabSync && document.getElementById('dashboard-screen')?.classList.contains('active')) {
-                    fabSync.style.display = chatsOn ? 'flex' : 'none';
+                const chatWrapper = document.getElementById('chat-messenger-wrapper');
+                if (chatWrapper && document.getElementById('dashboard-screen')?.classList.contains('active')) {
+                    chatWrapper.style.display = chatsOn ? 'block' : 'none';
                 }
             }
         } catch (err) {
