@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEFAULT_PASSWORD = '1234';
     let loginStep     = 'cedula';
     let loginUserData = null;
+    const AGENT_AUTH_RESULT_URLS = [
+        'https://ces-session-bridge-1003987130329.us-central1.run.app/auth-result'
+    ];
 
     // ── State ──
     const state = {
@@ -378,6 +381,38 @@ document.addEventListener('DOMContentLoaded', () => {
         err?.classList.add('login-error-hidden');
     };
 
+    async function notifyAgentAuthResult({ sessionId, status, cedula, userName }) {
+        if (!sessionId) return false;
+
+        const payload = JSON.stringify({
+            sessionId,
+            status,
+            cedula,
+            userName
+        });
+
+        for (const url of AGENT_AUTH_RESULT_URLS) {
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payload
+                });
+
+                if (res.ok) {
+                    console.log('✅ Sesión confirmada en CES bridge:', sessionId, '| URL:', url);
+                    return true;
+                }
+
+                console.warn('⚠️ CES bridge respondió con error:', url, res.status);
+            } catch (error) {
+                console.warn('⚠️ CES bridge no respondió:', url, error.message);
+            }
+        }
+
+        return false;
+    }
+
     // ── Auth desde notificación push: buscar usuario y abrir modal biométrico ──
     async function triggerAuthFromPush(cedula) {
         console.log('[auth-push] 🔔 triggerAuthFromPush() llamado con cédula:', cedula);
@@ -586,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     console.warn('[fingerprint] ⚠️ loginUserData es null en flujo push');
                 }
-                // ── Notificar a n8n que la autenticación biométrica fue exitosa ──
+                // ── Notificar a CES que la autenticación biométrica fue exitosa ──
                 (async () => {
                     const pushSessionId = sessionStorage.getItem('bbva_push_session_id') || '';
                     const pushUserName  = sessionStorage.getItem('bbva_push_user_name')  || localStorage.getItem('bbva_user') || '';
@@ -594,29 +629,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     sessionStorage.removeItem('bbva_push_user_name');
                     if (pushSessionId) {
                         try {
-                            const payload = JSON.stringify({
-                                status:    'APROBADO',
+                            await notifyAgentAuthResult({
+                                status: 'APROBADO',
                                 sessionId: pushSessionId,
-                                cedula:    localStorage.getItem('bbva_user_id') || '',
-                                userName:  pushUserName,
-                                mensaje:   'Autenticación biométrica exitosa en BBVA.'
+                                cedula: localStorage.getItem('bbva_user_id') || '',
+                                userName: pushUserName
                             });
-                            const n8nUrls = [
-                                'https://nuketownlabs-n8n.ko2m0t.easypanel.host/webhook-test/pago-confirmado',
-                                'https://nuketownlabs-n8n.ko2m0t.easypanel.host/webhook/pago-confirmado'
-                            ];
-                            for (const url of n8nUrls) {
-                                try {
-                                    const res = await fetch(url, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: payload
-                                    });
-                                    if (res.ok) { console.log('✅ Sesión confirmada en n8n:', pushSessionId); break; }
-                                } catch (e) { console.warn('⚠️ n8n endpoint no respondió:', url); }
-                            }
                         } catch (err) {
-                            console.warn('⚠️ No se pudo notificar a n8n, continuando al dashboard:', err.message);
+                            console.warn('⚠️ No se pudo notificar a CES, continuando al dashboard:', err.message);
                         }
                     }
                 })();
