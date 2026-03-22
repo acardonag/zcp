@@ -202,6 +202,29 @@
             line-height: 1.6;
         }
 
+        .ap-shipping-box {
+            background: white;
+            border-radius: var(--border-radius-sm);
+            padding: 14px 16px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .ap-shipping-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--bbva-light-blue);
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin: 0 0 8px;
+        }
+
+        .ap-shipping-text {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.6;
+            margin: 0;
+        }
+
         /* Countdown */
         .ap-countdown {
             text-align: center;
@@ -684,6 +707,11 @@
                     <p id="ap-info-text">Esta transacción será debitada de tu cuenta de ahorros principal. Tienes 5 minutos para confirmar esta operación.</p>
                 </div>
 
+                <div class="ap-shipping-box">
+                    <p class="ap-shipping-label">Dirección de envío</p>
+                    <p class="ap-shipping-text" id="ap-shipping-text">Tu producto será enviado a la dirección configurada en tu app BBVA.</p>
+                </div>
+
                 <!-- Medio de pago -->
                 <div class="pm-section" id="pm-section">
                     <p class="pm-title">Medio de pago</p>
@@ -816,9 +844,17 @@
         const card        = params.get('card')     || 'Visa *4242';
         const infoText    = params.get('info')     || 'Esta transacción será debitada de tu cuenta de ahorros principal. Tienes 5 minutos para confirmar esta operación.';
         const orderId     = params.get('orderId')   || '';
+        const orderKey    = params.get('orderKey')  || '';
         const sessionId   = params.get('sessionId') || '';
         const cedula      = params.get('cedula')    || localStorage.getItem('bbva_user_id') || '';
         const storeId     = params.get('storeId')   || '';
+        const productId   = params.get('productId') || '';
+        const shippingRecipient  = params.get('shippingRecipient') || '';
+        const shippingAddress    = params.get('shippingAddress') || '';
+        const shippingCity       = params.get('shippingCity') || '';
+        const shippingDepartment = params.get('shippingDepartment') || '';
+        const shippingEmail      = params.get('shippingEmail') || '';
+        const shippingPhone      = params.get('shippingPhone') || '';
         let selectedPaymentMethod = null;
 
         // Si llegamos desde un push sin sesión activa, guardar cedula para que el dashboard funcione al volver
@@ -859,6 +895,9 @@
         document.getElementById('ap-reference').textContent    = reference;
         document.getElementById('ap-amount').textContent       = amountFormatted;
         document.getElementById('ap-info-text').textContent    = infoText;
+        document.getElementById('ap-shipping-text').textContent = shippingAddress
+            ? `Tu producto será enviado a ${shippingAddress}${shippingCity ? `, ${shippingCity}` : ''}${shippingDepartment ? `, ${shippingDepartment}` : ''}.`
+            : 'Tu producto será enviado a la dirección configurada en tu app BBVA.';
 
         // Imagen del producto
         const imgContainer = document.getElementById('product-image-container');
@@ -894,6 +933,36 @@
                 showRejected('La sesión expiró. El pago fue cancelado automáticamente.');
             }
         }, 1000);
+
+        async function notifyPaymentResult(approved, paymentMethod) {
+            if (!orderId || !sessionId) return;
+
+            const payload = {
+                orderId,
+                orderKey,
+                sessionId,
+                cedula,
+                approved,
+                status: approved ? 'APROBADO' : 'RECHAZADO',
+                paymentMethod: paymentMethod || null,
+                storeId,
+                productId,
+                productName,
+                amount: rawAmount,
+                shippingRecipient,
+                shippingAddress,
+                shippingCity,
+                shippingDepartment,
+                shippingEmail,
+                shippingPhone
+            };
+
+            await fetch('https://ces-session-bridge-bla4v7hs7a-uc.a.run.app/payment-result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
 
         // ── Helpers de pantallas ──
         function showApproval() {
@@ -1001,15 +1070,10 @@
                     console.error('❌ Error debitando pago:', err.message);
                 }
 
-                // Notificar resultado a n8n
-                if (orderId && sessionId) {
-                    try {
-                        await fetch('https://nuketownlabs-n8n.ko2m0t.easypanel.host/webhook/confirmar-pago', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ orderId, sessionId, approved: true, paymentMethod: source, storeId })
-                        });
-                    } catch (e) { console.error('❌ Error notificando a n8n:', e.message); }
+                try {
+                    await notifyPaymentResult(true, source);
+                } catch (e) {
+                    console.error('❌ Error notificando aprobación a CES:', e.message);
                 }
 
                 // Ocultar spinner y mostrar recibo
@@ -1021,14 +1085,10 @@
 
         // ── Acciones ──
         document.getElementById('btn-reject').addEventListener('click', async () => {
-            if (orderId && sessionId) {
-                try {
-                    await fetch('https://nuketownlabs-n8n.ko2m0t.easypanel.host/webhook/confirmar-pago', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId, sessionId, approved: false, paymentMethod: null, storeId })
-                    });
-                } catch (e) { console.error('❌ Error notificando rechazo:', e.message); }
+            try {
+                await notifyPaymentResult(false, null);
+            } catch (e) {
+                console.error('❌ Error notificando rechazo a CES:', e.message);
             }
             clearPendingPayment(orderId);
             showRejected('Has rechazado esta operación.<br>Puedes cerrar esta ventana.');

@@ -14,7 +14,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // ── Cache ──────────────────────────────────────────────────────
-const CACHE_NAME = 'bbva-app-v18';
+const CACHE_NAME = 'bbva-app-v20';
 // Detectar base path según el dominio
 const IS_GITHUB = self.location.hostname === 'acardonag.github.io';
 const BASE = IS_GITHUB ? '/blue-agents-demo' : '';
@@ -108,11 +108,20 @@ function savePendingPaymentIDB(data) {
             const store = tx.objectStore('payments');
             store.put({
                 orderId:     data.orderId     || '',
+                orderKey:    data.orderKey    || '',
                 cedula:      data.cedula      || '',
                 productName: data.productName || '',
                 amount:      data.amount      || '',
                 sessionId:   data.sessionId   || '',
+                productId:   data.productId   || '',
+                storeId:     data.storeId     || '',
                 imageUrl:    data.imageUrl    || '',
+                shippingRecipient: data.shippingRecipient || '',
+                shippingAddress:   data.shippingAddress   || '',
+                shippingCity:      data.shippingCity      || '',
+                shippingDepartment:data.shippingDepartment|| '',
+                shippingEmail:     data.shippingEmail     || '',
+                shippingPhone:     data.shippingPhone     || '',
                 timestamp:   Date.now(),
                 status:      'pending'
             });
@@ -159,10 +168,18 @@ messaging.onBackgroundMessage((payload) => {
             sessionId:   data.sessionId   || '',
             userName:    data.userName    || '',
             orderId:     data.orderId     || '',
+            orderKey:    data.orderKey    || '',
+            productId:   data.productId   || '',
             productName: data.productName || '',
             amount:      data.amount      || '',
             storeId:     data.storeId     || '',
-            imageUrl:    data.imageUrl    || ''
+            imageUrl:    data.imageUrl    || '',
+            shippingRecipient: data.shippingRecipient || '',
+            shippingAddress:   data.shippingAddress   || '',
+            shippingCity:      data.shippingCity      || '',
+            shippingDepartment:data.shippingDepartment|| '',
+            shippingEmail:     data.shippingEmail     || '',
+            shippingPhone:     data.shippingPhone     || ''
         },
         actions
     });
@@ -190,10 +207,18 @@ self.addEventListener('notificationclick', (event) => {
             + '&amount='    + encodeURIComponent(data.amount || '')
             + '&reference=' + encodeURIComponent(data.orderId || '')
             + '&orderId='   + encodeURIComponent(data.orderId || '')
+            + '&orderKey='  + encodeURIComponent(data.orderKey || '')
             + '&sessionId=' + encodeURIComponent(data.sessionId || '')
             + '&cedula='    + encodeURIComponent(data.cedula || '')
             + '&storeId='   + encodeURIComponent(data.storeId || '')
-            + '&image='     + encodeURIComponent(data.imageUrl || '');
+            + '&productId=' + encodeURIComponent(data.productId || '')
+            + '&image='     + encodeURIComponent(data.imageUrl || '')
+            + '&shippingRecipient=' + encodeURIComponent(data.shippingRecipient || '')
+            + '&shippingAddress='   + encodeURIComponent(data.shippingAddress || '')
+            + '&shippingCity='      + encodeURIComponent(data.shippingCity || '')
+            + '&shippingDepartment='+ encodeURIComponent(data.shippingDepartment || '')
+            + '&shippingEmail='     + encodeURIComponent(data.shippingEmail || '')
+            + '&shippingPhone='     + encodeURIComponent(data.shippingPhone || '');
     } else {
         targetUrl = base + '?push=1&type=' + (data.type || '') + '&session=' + (data.sessionId || '');
     }

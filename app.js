@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let loginStep     = 'cedula';
     let loginUserData = null;
     const AGENT_AUTH_RESULT_URLS = [
-        'https://ces-session-bridge-1003987130329.us-central1.run.app/auth-result'
+        'https://ces-session-bridge-bla4v7hs7a-uc.a.run.app/auth-result'
     ];
 
     // ── State ──
@@ -719,8 +719,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     + `&amount=${encodeURIComponent(pending.amount)}`
                     + `&reference=${encodeURIComponent(pending.orderId)}`
                     + `&orderId=${encodeURIComponent(pending.orderId)}`
+                    + `&orderKey=${encodeURIComponent(pending.orderKey || '')}`
                     + `&sessionId=${encodeURIComponent(pending.sessionId)}`
-                    + `&cedula=${encodeURIComponent(pending.cedula)}`;
+                    + `&cedula=${encodeURIComponent(pending.cedula)}`
+                    + `&storeId=${encodeURIComponent(pending.storeId || '')}`
+                    + `&productId=${encodeURIComponent(pending.productId || '')}`
+                    + `&image=${encodeURIComponent(pending.imageUrl || '')}`
+                    + `&shippingRecipient=${encodeURIComponent(pending.shippingRecipient || '')}`
+                    + `&shippingAddress=${encodeURIComponent(pending.shippingAddress || '')}`
+                    + `&shippingCity=${encodeURIComponent(pending.shippingCity || '')}`
+                    + `&shippingDepartment=${encodeURIComponent(pending.shippingDepartment || '')}`
+                    + `&shippingEmail=${encodeURIComponent(pending.shippingEmail || '')}`
+                    + `&shippingPhone=${encodeURIComponent(pending.shippingPhone || '')}`;
                 card.style.display = 'flex';
                 if (window.lucide) window.lucide.createIcons();
             } else {
