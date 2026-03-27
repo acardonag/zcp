@@ -61,12 +61,12 @@ No tiene backend propio — todo el estado persiste en **Firebase Firestore** y 
 4. Aprobación de pago (payment-approval.html)
    └── Se abre cuando llega push FCM tipo AUTH_REQUEST
    └── Muestra producto, monto, datos del pedido
-   └── Usuario aprueba con biometría simulada → POST a n8n /pago-confirmado
+   └── Usuario aprueba con biometría simulada → POST al bridge de CES
    └── Usuario rechaza → pantalla de rechazo
 
 5. Chat (chat/index.html)
    └── Solo visible si piSettings.channels.chats === true
-   └── Conecta con el webhook blue-agent-chat del n8n
+   └── Conecta con el bridge de CES en GCP
 ```
 
 ---
@@ -107,16 +107,16 @@ No tiene backend propio — todo el estado persiste en **Firebase Firestore** y 
 
 ---
 
-## Integración con n8n (Blue Agents)
+## Integración con GCP (Blue Agents)
 
 | Evento | Dirección | Detalle |
 |---|---|---|
-| FCM push `AUTH_REQUEST` | n8n → App | n8n envía push cuando el agente de Telegram pide autenticar al usuario |
+| FCM push `AUTH_REQUEST` | GCP → App | El bridge en GCP envía push cuando el agente pide autenticar al usuario |
 | `payment-approval.html` abre | App (cliente) | La app recibe el push y abre la pantalla de aprobación |
-| POST `/pago-confirmado` | App → n8n | Al aprobar, la app llama al webhook de n8n con `{sessionId, userName}` |
-| Chat BBVA | App → n8n | `chat/index.html` hace POST al webhook `/blue-agent-chat` |
+| POST `/payment-result` | App → CES bridge | Al aprobar, la app llama al bridge de CES con `{sessionId, status}` |
+| Chat BBVA | App → CES bridge | `chat/index.html` hace POST al bridge `/chat` |
 
-**Webhook n8n:** `https://nuketownlabs-n8n.ko2m0t.easypanel.host`
+**Bridge CES:** `https://ces-session-bridge-bla4v7hs7a-uc.a.run.app`
 
 ---
 

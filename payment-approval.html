@@ -962,6 +962,18 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+
+            if (approved) {
+                await fetch('https://voice-commerce-bridge-1003987130329.us-central1.run.app/payment-approved', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderId,
+                        sessionId,
+                        status: 'processing'
+                    })
+                });
+            }
         }
 
         // ── Helpers de pantallas ──
