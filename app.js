@@ -623,9 +623,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 // ── Notificar a CES que la autenticación biométrica fue exitosa ──
                 (async () => {
-                    const pushSessionId = sessionStorage.getItem('bbva_push_session_id') || '';
+                    const pushSessionId =
+                        sessionStorage.getItem('bbva_push_session_id') ||
+                        sessionStorage.getItem('bbva_auth_session') ||
+                        '';
                     const pushUserName  = sessionStorage.getItem('bbva_push_user_name')  || localStorage.getItem('bbva_user') || '';
                     sessionStorage.removeItem('bbva_push_session_id');
+                    sessionStorage.removeItem('bbva_auth_session');
                     sessionStorage.removeItem('bbva_push_user_name');
                     if (pushSessionId) {
                         try {
