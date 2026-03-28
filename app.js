@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let loginStep     = 'cedula';
     let loginUserData = null;
     const AGENT_AUTH_RESULT_URLS = [
-        'https://ces-session-bridge-bla4v7hs7a-uc.a.run.app/auth-result'
+        'https://ces-session-bridge-1003987130329.us-central1.run.app/auth-result'
     ];
 
     // ── State ──
