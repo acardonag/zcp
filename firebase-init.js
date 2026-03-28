@@ -327,7 +327,7 @@ async function initPushNotifications(cedula, options = {}) {
         const swPath  = location.hostname === 'acardonag.github.io' ? '/blue-agents-demo/sw.js' : '/sw.js';
         const swScope = location.hostname === 'acardonag.github.io' ? '/blue-agents-demo/'      : '/';
         console.log('[FCM] Registrando SW en:', swPath, '| Scope:', swScope);
-        const swReg = await navigator.serviceWorker.register(swPath, { scope: swScope });
+        const swReg = await navigator.serviceWorker.register(swPath, { scope: swScope, type: 'module' });
         await navigator.serviceWorker.ready;
         console.log('[FCM] ✅ SW registrado:', swReg.scope);
         console.log('[FCM] SW estado:', swReg.active?.state);
