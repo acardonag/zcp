@@ -43,6 +43,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const promptPushPermissionsOnOpen = async () => {
+        if (sessionStorage.getItem('bbva_push_prompted_on_open') === '1') return;
+        sessionStorage.setItem('bbva_push_prompted_on_open', '1');
+
+        const permission = Notification?.permission;
+        console.log('[FCM] Auto-prompt al abrir app | permiso actual:', permission);
+        if (permission === 'granted') return;
+
+        const cedula = localStorage.getItem('bbva_user_id') || '';
+        if (window.enablePushNotifications) {
+            await window.enablePushNotifications(cedula);
+        } else if (window.initPushNotifications) {
+            await window.initPushNotifications(cedula, { promptPermission: true });
+        }
+    };
+
     // ── Formateo de moneda COP ──
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('es-CO', {
@@ -144,6 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Welcome Screen ──
+    if (document.visibilityState !== 'hidden') {
+        setTimeout(() => {
+            promptPushPermissionsOnOpen().catch(err => {
+                console.warn('[FCM] Auto-prompt al abrir app falló:', err?.message || err);
+            });
+        }, 250);
+    }
+
     document.getElementById('to-register')?.addEventListener('click', () => {
         // Limpiar campos del formulario
         document.getElementById('reg-name').value  = '';
