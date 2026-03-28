@@ -166,7 +166,7 @@ async function createUserFinancialData(cedula) {
             accountId,
             accountNumber: `COL-${accountDisplay}-BBVA`,
             type:          'Cuenta de Ahorros',
-            balance:       12000000,
+            balance:       50000000,
             currency:      'COP',
             createdAt:     new Date().toISOString()
         });
@@ -178,8 +178,8 @@ async function createUserFinancialData(cedula) {
             cardNumber:       `**** **** **** ${cardDisplay}`,
             type:             'Tarjeta de Crédito',
             brand:            'Visa',
-            availableBalance: 4000000,
-            totalLimit:       4000000,
+            availableBalance: 50000000,
+            totalLimit:       50000000,
             currency:         'COP',
             createdAt:        new Date().toISOString()
         });
