@@ -1,4 +1,4 @@
-window.BBVA_FIREBASE_CONFIG = {
+export const BBVA_FIREBASE_CONFIG = {
     apiKey:            "AIzaSyDbtGA_5oyQLWq9X41gsKsLwV7nr9iv0iQ",
     authDomain:        "team-blue-agents.firebaseapp.com",
     projectId:         "team-blue-agents",
@@ -8,4 +8,4 @@ window.BBVA_FIREBASE_CONFIG = {
     measurementId:     "G-8WF0YJ69XM"
 };
 
-window.BBVA_FIREBASE_VAPID_KEY = 'BMZi10qT5B_s2BonvSbZIUohtFeVnuS3MZqt2UrVH1QQb9K3wKLG9uwMj3U-I0GLe9C9tkMoR463gtjukurUX1o';
+export const BBVA_FIREBASE_VAPID_KEY = 'BMZi10qT5B_s2BonvSbZIUohtFeVnuS3MZqt2UrVH1QQb9K3wKLG9uwMj3U-I0GLe9C9tkMoR463gtjukurUX1o';

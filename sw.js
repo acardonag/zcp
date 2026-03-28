@@ -2,17 +2,9 @@
 // Usando el SDK modular moderno para consistencia con la app.
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { getMessaging, onBackgroundMessage } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-sw.js';
+import { BBVA_FIREBASE_CONFIG } from './config.js';
 
-const FIREBASE_CONFIG = {
-    apiKey:            'AIzaSyDbtGA_5oyQLWq9X41gsKsLwV7nr9iv0iQ',
-    authDomain:        'team-blue-agents.firebaseapp.com',
-    projectId:         'team-blue-agents',
-    storageBucket:     'team-blue-agents.firebasestorage.app',
-    messagingSenderId: '1003987130329',
-    appId:             '1:1003987130329:web:1cfa39c493c6be356dabc8'
-};
-
-const firebaseApp = initializeApp(FIREBASE_CONFIG);
+const firebaseApp = initializeApp(BBVA_FIREBASE_CONFIG);
 const messaging = getMessaging(firebaseApp);
 
 // ── Cache ──────────────────────────────────────────────────────

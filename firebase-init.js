@@ -1,17 +1,11 @@
 import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import { getMessaging, getToken, onMessage }       from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js';
+import { BBVA_FIREBASE_CONFIG, BBVA_FIREBASE_VAPID_KEY } from './config.js';
 
 // ── Configuración Firebase por runtime para poder cambiar de proyecto sin tocar el bundle ──
-const firebaseConfig = window.BBVA_FIREBASE_CONFIG || {
-    apiKey:            "AIzaSyDbtGA_5oyQLWq9X41gsKsLwV7nr9iv0iQ",
-    authDomain:        "team-blue-agents.firebaseapp.com",
-    projectId:         "team-blue-agents",
-    storageBucket:     "team-blue-agents.firebasestorage.app",
-    messagingSenderId: "1003987130329",
-    appId:             "1:1003987130329:web:1cfa39c493c6be356dabc8"
-};
-const VAPID_KEY = window.BBVA_FIREBASE_VAPID_KEY;
+const firebaseConfig = BBVA_FIREBASE_CONFIG;
+const VAPID_KEY = BBVA_FIREBASE_VAPID_KEY;
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db          = getFirestore(firebaseApp);
