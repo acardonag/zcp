@@ -11,7 +11,7 @@ const firebaseConfig = window.BBVA_FIREBASE_CONFIG || {
     messagingSenderId: "1003987130329",
     appId:             "1:1003987130329:web:1cfa39c493c6be356dabc8"
 };
-const VAPID_KEY = window.BBVA_FIREBASE_VAPID_KEY || 'BL1nSLXaN-rF8d5EP2SrGAH5YPOW1BTQuq0CD6aWRN6iHUpsHVk3eYZncsHWXdrfvTrkj7SrQHKOqyPpXjuiw9M';
+const VAPID_KEY = window.BBVA_FIREBASE_VAPID_KEY;
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db          = getFirestore(firebaseApp);
