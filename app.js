@@ -490,6 +490,9 @@ document.addEventListener('DOMContentLoaded', () => {
             clearCedulaError();
 
             try {
+                if (window.enablePushNotifications && cedula) {
+                    window.enablePushNotifications(cedula);
+                }
                 if (!window.firebaseReady) {
                     await new Promise((resolve, reject) => {
                         const t = setTimeout(() => reject(new Error('Firebase timeout')), 10000);
@@ -604,6 +607,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isFromPush = sessionStorage.getItem('bbva_auth_from_push') === '1';
         console.log('[fingerprint] isFromPush:', isFromPush, '| loginUserData:', loginUserData?.name || 'null');
+
+        const cedPrompt = localStorage.getItem('bbva_user_id') || loginUserData?.cedula || '';
+        if (cedPrompt && window.enablePushNotifications) {
+            window.enablePushNotifications(cedPrompt);
+        }
 
         setTimeout(() => {
             biometricModal.style.display = 'none';
