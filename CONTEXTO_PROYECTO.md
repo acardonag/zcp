@@ -20,7 +20,7 @@ No tiene backend propio — todo el estado persiste en **Firebase Firestore** y 
 | Base de datos | Firebase Firestore (`team-blue-agents`) |
 | Push notifications | Firebase Cloud Messaging (FCM) |
 | PWA | Service Worker (`sw.js`) — cache v16 |
-| Deploy | Firebase Hosting (`firebase.json`) |
+| Deploy | Firebase Hosting site `zero-clic-payments` (`firebase.json`) |
 | Fuentes / íconos | Google Fonts Inter + Lucide Icons |
 
 ---
@@ -133,7 +133,7 @@ VAPID Key:    ver firebase-config.js
 
 ## Deploy
 
-- **Firebase Hosting** — el deploy actual publica el frontend en `team-blue-agents`
+- **Firebase Hosting** — el deploy actual publica el frontend en el site `zero-clic-payments`
 - `_headers` configura cache: `sw.js` y `manifest.json` no se cachean; assets estáticos se cachean 1 año
 - Service Worker versión actual: **v20** (`CACHE_NAME = 'bbva-app-v20'`)
 - También soporta ejecución local para pruebas (`http://localhost:8097`)

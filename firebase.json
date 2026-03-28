@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "zero-clic-payments",
     "public": ".",
     "ignore": [
       "firebase.json",
