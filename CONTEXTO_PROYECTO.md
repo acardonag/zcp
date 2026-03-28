@@ -17,10 +17,10 @@ No tiene backend propio — todo el estado persiste en **Firebase Firestore** y 
 | Capa | Tecnología |
 |---|---|
 | Frontend | HTML + CSS + Vanilla JS (sin frameworks) |
-| Base de datos | Firebase Firestore (`zero-clic-payment`) |
+| Base de datos | Firebase Firestore (`team-blue-agents`) |
 | Push notifications | Firebase Cloud Messaging (FCM) |
 | PWA | Service Worker (`sw.js`) — cache v16 |
-| Deploy | Cloudflare Pages (`_headers`, `_redirects`) |
+| Deploy | Firebase Hosting (`firebase.json`) |
 | Fuentes / íconos | Google Fonts Inter + Lucide Icons |
 
 ---
@@ -116,27 +116,27 @@ No tiene backend propio — todo el estado persiste en **Firebase Firestore** y 
 | POST `/payment-result` | App → CES bridge | Al aprobar, la app llama al bridge de CES con `{sessionId, status}` |
 | Chat BBVA | App → CES bridge | `chat/index.html` hace POST al bridge `/chat` |
 
-**Bridge CES:** `https://ces-session-bridge-bla4v7hs7a-uc.a.run.app`
+**Bridge CES:** `https://ces-session-bridge-1003987130329.us-central1.run.app`
 
 ---
 
 ## Firebase
 
 ```
-Project ID:   zero-clic-payment
-App ID:       1:367886461501:web:25e36faafd8ef4dde4d854
-Messaging ID: 367886461501
-VAPID Key:    BL1nSLXaN-rF8d5EP2SrGAH5YPOW1BTQuq0CD6aWRN6iHUpsHVk3eYZncsHWXdrfvTrkj7SrQHKOqyPpXjuiw9M
+Project ID:   team-blue-agents
+App ID:       1:1003987130329:web:1cfa39c493c6be356dabc8
+Messaging ID: 1003987130329
+VAPID Key:    ver firebase-config.js
 ```
 
 ---
 
 ## Deploy
 
-- **Cloudflare Pages** — `_redirects` redirige todo a `index.html` (SPA)
+- **Firebase Hosting** — el deploy actual publica el frontend en `team-blue-agents`
 - `_headers` configura cache: `sw.js` y `manifest.json` no se cachean; assets estáticos se cachean 1 año
-- Service Worker versión actual: **v16** (`CACHE_NAME = 'bbva-app-v16'`)
-- También desplegado en **GitHub Pages** (`acardonag.github.io/zcp`) — el SW detecta el dominio y ajusta el `BASE` path
+- Service Worker versión actual: **v20** (`CACHE_NAME = 'bbva-app-v20'`)
+- También soporta ejecución local para pruebas (`http://localhost:8097`)
 
 ---
 

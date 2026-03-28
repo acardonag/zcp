@@ -2,13 +2,17 @@
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
+const FIREBASE_CONFIG = {
+    apiKey:            'AIzaSyDbtGA_5oyQLWq9X41gsKsLwV7nr9iv0iQ',
+    authDomain:        'team-blue-agents.firebaseapp.com',
+    projectId:         'team-blue-agents',
+    storageBucket:     'team-blue-agents.firebasestorage.app',
+    messagingSenderId: '1003987130329',
+    appId:             '1:1003987130329:web:1cfa39c493c6be356dabc8'
+};
+
 firebase.initializeApp({
-    apiKey:            'AIzaSyDFtznjbqtsJ2EOQXqic0ZvPcQWabzZ-YU',
-    authDomain:        'zero-clic-payment.firebaseapp.com',
-    projectId:         'zero-clic-payment',
-    storageBucket:     'zero-clic-payment.firebasestorage.app',
-    messagingSenderId: '367886461501',
-    appId:             '1:367886461501:web:25e36faafd8ef4dde4d854'
+    ...FIREBASE_CONFIG
 });
 
 const messaging = firebase.messaging();

@@ -2,17 +2,16 @@ import { initializeApp }                          from 'https://www.gstatic.com/
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import { getMessaging, getToken, onMessage }       from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js';
 
-// ── VAPID Key generada en Firebase Console → Project Settings → Cloud Messaging
-const VAPID_KEY = 'BL1nSLXaN-rF8d5EP2SrGAH5YPOW1BTQuq0CD6aWRN6iHUpsHVk3eYZncsHWXdrfvTrkj7SrQHKOqyPpXjuiw9M';
-
-const firebaseConfig = {
-    apiKey:            "AIzaSyDFtznjbqtsJ2EOQXqic0ZvPcQWabzZ-YU",
-    authDomain:        "zero-clic-payment.firebaseapp.com",
-    projectId:         "zero-clic-payment",
-    storageBucket:     "zero-clic-payment.firebasestorage.app",
-    messagingSenderId: "367886461501",
-    appId:             "1:367886461501:web:25e36faafd8ef4dde4d854"
+// ── Configuración Firebase por runtime para poder cambiar de proyecto sin tocar el bundle ──
+const firebaseConfig = window.BBVA_FIREBASE_CONFIG || {
+    apiKey:            "AIzaSyDbtGA_5oyQLWq9X41gsKsLwV7nr9iv0iQ",
+    authDomain:        "team-blue-agents.firebaseapp.com",
+    projectId:         "team-blue-agents",
+    storageBucket:     "team-blue-agents.firebasestorage.app",
+    messagingSenderId: "1003987130329",
+    appId:             "1:1003987130329:web:1cfa39c493c6be356dabc8"
 };
+const VAPID_KEY = window.BBVA_FIREBASE_VAPID_KEY || 'BL1nSLXaN-rF8d5EP2SrGAH5YPOW1BTQuq0CD6aWRN6iHUpsHVk3eYZncsHWXdrfvTrkj7SrQHKOqyPpXjuiw9M';
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db          = getFirestore(firebaseApp);
@@ -302,15 +301,21 @@ async function getTransactions(cedula, maxItems = 50) {
 }
 
 // ── Solicitar permiso push y obtener FCM Token ────────────────
-async function initPushNotifications(cedula) {
+async function initPushNotifications(cedula, options = {}) {
+    const { promptPermission = false } = options;
     try {
         if (!('Notification' in window)) {
             console.warn('[FCM] Este navegador no soporta notificaciones');
             return null;
         }
 
-        console.log('[FCM] Solicitando permiso...');
-        const permission = await Notification.requestPermission();
+        let permission = Notification.permission;
+        if (permission !== 'granted' && promptPermission) {
+            console.log('[FCM] Solicitando permiso...');
+            permission = await Notification.requestPermission();
+        } else {
+            console.log('[FCM] Estado actual del permiso:', permission);
+        }
         console.log('[FCM] Permiso:', permission);
 
         if (permission !== 'granted') {
@@ -411,6 +416,7 @@ window.updatePagosInteligentes     = updatePagosInteligentes;
 window.updatePISettings            = updatePISettings;
 window.updateDeliveryData          = updateDeliveryData;
 window.initPushNotifications       = initPushNotifications;
+window.enablePushNotifications     = (cedula) => initPushNotifications(cedula, { promptPermission: true });
 window.createUserFinancialData     = createUserFinancialData;
 window.getUserAccount              = getUserAccount;
 window.getUserCreditCard           = getUserCreditCard;

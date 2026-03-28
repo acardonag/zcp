@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             loadDashboardBalances();
-            // Solicitar permiso push y registrar FCM token
+            // Registrar FCM sin forzar el prompt de permiso durante el login
             if (window.initPushNotifications) window.initPushNotifications(cedLogin);
             // Re-sincronizar pagosInteligentes desde Firestore en segundo plano
             // (necesario cuando el login omitió la búsqueda en Firestore por sesión guardada)
