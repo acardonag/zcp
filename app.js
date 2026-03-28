@@ -557,8 +557,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             loadDashboardBalances();
-            // Registrar FCM sin forzar el prompt de permiso durante el login
-            if (window.initPushNotifications) window.initPushNotifications(cedLogin);
+            // Registrar FCM con prompt explícito en un gesto del usuario
+            if (window.enablePushNotifications) {
+                window.enablePushNotifications(cedLogin);
+            } else if (window.initPushNotifications) {
+                window.initPushNotifications(cedLogin, { promptPermission: true });
+            }
             // Re-sincronizar pagosInteligentes desde Firestore en segundo plano
             // (necesario cuando el login omitió la búsqueda en Firestore por sesión guardada)
             if (window.getUserByCedula) {
@@ -655,7 +659,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('[fingerprint] ✅ Modal de éxito mostrado');
                 }
                 const cedBio = localStorage.getItem('bbva_user_id');
-                if (window.initPushNotifications) window.initPushNotifications(cedBio);
+                if (window.enablePushNotifications) {
+                    window.enablePushNotifications(cedBio);
+                } else if (window.initPushNotifications) {
+                    window.initPushNotifications(cedBio, { promptPermission: true });
+                }
             } else {
                 // ── Flujo normal de biometría ──
                 console.log('[fingerprint] Flujo NORMAL → dashboard');
@@ -664,7 +672,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadDashboardBalances();
                 showPIWelcomeModal();
                 const cedBio = localStorage.getItem('bbva_user_id');
-                if (window.initPushNotifications) window.initPushNotifications(cedBio);
+                if (window.enablePushNotifications) {
+                    window.enablePushNotifications(cedBio);
+                } else if (window.initPushNotifications) {
+                    window.initPushNotifications(cedBio, { promptPermission: true });
+                }
             }
 
             if (icon) {
