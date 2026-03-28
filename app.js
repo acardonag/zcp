@@ -496,6 +496,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function openPaymentApprovalFromPush(data = {}) {
+        const params = new URLSearchParams({
+            product: data.productName || '',
+            amount: data.amount || '',
+            reference: data.orderId || '',
+            orderId: data.orderId || '',
+            orderKey: data.orderKey || '',
+            sessionId: data.sessionId || '',
+            cedula: data.cedula || localStorage.getItem('bbva_user_id') || '',
+            storeId: data.storeId || '',
+            productId: data.productId || '',
+            image: data.imageUrl || '',
+            shippingRecipient: data.shippingRecipient || '',
+            shippingAddress: data.shippingAddress || '',
+            shippingCity: data.shippingCity || '',
+            shippingDepartment: data.shippingDepartment || '',
+            shippingEmail: data.shippingEmail || '',
+            shippingPhone: data.shippingPhone || ''
+        });
+
+        const cedula = params.get('cedula') || '';
+        if (cedula) {
+            localStorage.setItem('bbva_user_id', cedula);
+        }
+
+        const targetUrl = `payment-approval.html?${params.toString()}`;
+        console.log('[payment-push] Abriendo aprobación de pago:', targetUrl);
+        window.location.href = targetUrl;
+    }
+
     document.getElementById('login-cedula')?.addEventListener('input', clearCedulaError);
     document.getElementById('login-password')?.addEventListener('input', clearLoginError);
 
@@ -1178,11 +1208,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Escuchar evento de autenticación desde push (foreground) ──
     window.addEventListener('bbva-auth-request', (event) => {
-        const data = event.detail;
-        console.log('[push] Auth request recibido (foreground):', data);
-        if (data.cedula) {
+        const pushData = event.detail?.data || {};
+        console.log('[push] Auth request recibido (foreground):', pushData);
+        if (pushData.cedula) {
             sessionStorage.setItem('bbva_auth_from_push', '1');
-            triggerAuthFromPush(data.cedula);
+            if (pushData.sessionId) sessionStorage.setItem('bbva_push_session_id', pushData.sessionId);
+            if (pushData.sessionId) sessionStorage.setItem('bbva_auth_session', pushData.sessionId);
+            if (pushData.userName) sessionStorage.setItem('bbva_push_user_name', pushData.userName);
+            if (pushData.userName) localStorage.setItem('bbva_user', pushData.userName);
+            triggerAuthFromPush(pushData.cedula);
+        }
+    });
+
+    window.addEventListener('bbva-payment-request', (event) => {
+        const { data } = event.detail || {};
+        console.log('[push] Payment request recibido (foreground):', data);
+        if (data?.orderId) {
+            openPaymentApprovalFromPush(data);
         }
     });
 

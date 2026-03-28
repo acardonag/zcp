@@ -397,13 +397,23 @@ onMessage(messaging, (payload) => {
     }
 
     // 2️⃣ Toast / modal dentro de la app según el tipo
-    // AUTH_REQUEST: solo mostrar notificación nativa (el flujo se activa cuando el usuario hace clic)
     if (data.type === 'TEST_PUSH') {
         window.dispatchEvent(new CustomEvent('bbva-test-push', {
             detail: { title, body, data }
         }));
+    } else if (data.type === 'AUTH_REQUEST') {
+        window.dispatchEvent(new CustomEvent('bbva-auth-request', {
+            detail: { title, body, data }
+        }));
     } else if (data.type === 'BIOMETRIC_REQUEST') {
         window.dispatchEvent(new CustomEvent('bbva-biometric-request', { detail: data }));
+    } else if (data.type === 'ORDER_PAYMENT_REQUEST') {
+        window.dispatchEvent(new CustomEvent('bbva-payment-request', {
+            detail: { title, body, data }
+        }));
+        window.dispatchEvent(new CustomEvent('bbva-push-notification', {
+            detail: { title, body, data }
+        }));
     } else if (data.type !== 'AUTH_REQUEST') {
         window.dispatchEvent(new CustomEvent('bbva-push-notification', {
             detail: { title, body, data }
