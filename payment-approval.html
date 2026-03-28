@@ -970,7 +970,9 @@
                     body: JSON.stringify({
                         orderId,
                         sessionId,
-                        status: 'processing'
+                        status: 'processing',
+                        storeId,
+                        storeName: ''
                     })
                 });
             }

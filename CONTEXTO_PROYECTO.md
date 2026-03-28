@@ -33,7 +33,7 @@ No tiene backend propio — todo el estado persiste en **Firebase Firestore** y 
 | `app.js` | Toda la lógica de UI/UX: navegación entre pantallas, login, dashboard, saldos, PI |
 | `firebase-init.js` | Inicialización Firebase, funciones Firestore (CRUD usuarios, cuentas, deliveryData, piSettings) |
 | `styles.css` | Estilos globales con variables CSS (`--bbva-navy`, `--bbva-light-blue`, etc.) |
-| `payment-approval.html` | Pantalla de **aprobación/rechazo de pago** — se abre al recibir un push `AUTH_REQUEST` |
+| `payment-approval.html` | Pantalla de **aprobación/rechazo de pago** — se abre al recibir un push `ORDER_PAYMENT_REQUEST` |
 | `chat/index.html` | Interfaz de chat con el agente virtual BBVA (canal "Chats" de Pagos Inteligentes) |
 | `sw.js` | Service Worker: cache de assets, manejo FCM en background |
 | `manifest.json` | Configuración PWA (nombre BBVA Colombia, color `#004481`, standalone) |
@@ -58,8 +58,14 @@ No tiene backend propio — todo el estado persiste en **Firebase Firestore** y 
    └── Checkboxes canales: WhatsApp, Telegram, Alexa, Chats → updatePISettings()
    └── Datos de envío: dirección, ciudad, email, teléfono → updateDeliveryData()
 
-4. Aprobación de pago (payment-approval.html)
+4. Autenticación por push
    └── Se abre cuando llega push FCM tipo AUTH_REQUEST
+   └── Muestra el modal biométrico de la app BBVA
+   └── Usuario aprueba con biometría simulada → POST al bridge de CES
+   └── Usuario rechaza → el flujo se cierra sin avanzar
+
+5. Aprobación de pago (payment-approval.html)
+   └── Se abre cuando llega push FCM tipo ORDER_PAYMENT_REQUEST
    └── Muestra producto, monto, datos del pedido
    └── Usuario aprueba con biometría simulada → POST al bridge de CES
    └── Usuario rechaza → pantalla de rechazo
@@ -112,7 +118,8 @@ No tiene backend propio — todo el estado persiste en **Firebase Firestore** y 
 | Evento | Dirección | Detalle |
 |---|---|---|
 | FCM push `AUTH_REQUEST` | GCP → App | El bridge en GCP envía push cuando el agente pide autenticar al usuario |
-| `payment-approval.html` abre | App (cliente) | La app recibe el push y abre la pantalla de aprobación |
+| FCM push `ORDER_PAYMENT_REQUEST` | GCP → App | El bridge en GCP envía push cuando la orden de compra quedó lista para aprobarse |
+| `payment-approval.html` abre | App (cliente) | La app recibe el push de pago y abre la pantalla de aprobación |
 | POST `/payment-result` | App → CES bridge | Al aprobar, la app llama al bridge de CES con `{sessionId, status}` |
 | Chat BBVA | App → CES bridge | `chat/index.html` hace POST al bridge `/chat` |
 
