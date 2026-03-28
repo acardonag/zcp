@@ -342,6 +342,7 @@ async function initPushNotifications(cedula, options = {}) {
 
         console.log('[FCM] ✅ Token obtenido:', token);
         localStorage.setItem('bbva_fcm_token', token);
+        window.bbvaFcmToken = token;
 
         // Verificar suscripción activa después de obtener token
         const activeSub = await swReg.pushManager.getSubscription();
@@ -374,6 +375,10 @@ onMessage(messaging, (payload) => {
     const title = notif.title || 'BBVA Colombia';
     const body  = notif.body  || '';
 
+    if (data.type === 'TEST_PUSH') {
+        console.log('[FCM] TEST_PUSH recibido en foreground');
+    }
+
     // 1️⃣ Notificación nativa via SW (funciona en PWA y navegador)
     if (Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then((swReg) => {
@@ -393,7 +398,11 @@ onMessage(messaging, (payload) => {
 
     // 2️⃣ Toast / modal dentro de la app según el tipo
     // AUTH_REQUEST: solo mostrar notificación nativa (el flujo se activa cuando el usuario hace clic)
-    if (data.type === 'BIOMETRIC_REQUEST') {
+    if (data.type === 'TEST_PUSH') {
+        window.dispatchEvent(new CustomEvent('bbva-test-push', {
+            detail: { title, body, data }
+        }));
+    } else if (data.type === 'BIOMETRIC_REQUEST') {
         window.dispatchEvent(new CustomEvent('bbva-biometric-request', { detail: data }));
     } else if (data.type !== 'AUTH_REQUEST') {
         window.dispatchEvent(new CustomEvent('bbva-push-notification', {

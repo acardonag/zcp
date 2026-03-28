@@ -127,6 +127,18 @@ function savePendingPaymentIDB(data) {
 }
 
 // ── FCM: notificaciones en BACKGROUND ─────────────────────────
+self.addEventListener('push', (event) => {
+    event.waitUntil((async () => {
+        const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const client of clientsList) {
+            client.postMessage({
+                type: 'SW_PUSH_NATIVE',
+                raw: event.data ? event.data.text() : ''
+            });
+        }
+    })());
+});
+
 onBackgroundMessage(messaging, (payload) => {
     console.log('[SW] 🔔 Push en background:', payload);
     const { title, body } = payload.notification || {};
@@ -177,10 +189,21 @@ onBackgroundMessage(messaging, (payload) => {
         },
         actions
     });
+    const notifyClientsPromise = (async () => {
+        const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const client of clientsList) {
+            client.postMessage({
+                type: 'SW_BACKGROUND_PUSH',
+                title: title || 'BBVA Colombia',
+                body: body || 'Tienes una nueva notificación',
+                data
+            });
+        }
+    })();
     if (data.type === 'ORDER_PAYMENT_REQUEST') {
-        return Promise.all([notifPromise, savePendingPaymentIDB(data)]);
+        return Promise.all([notifPromise, savePendingPaymentIDB(data), notifyClientsPromise]);
     }
-    return notifPromise;
+    return Promise.all([notifPromise, notifyClientsPromise]);
 });
 
 // ── Clic en la notificación ────────────────────────────────────
