@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let loginStep     = 'cedula';
     let loginUserData = null;
     const AGENT_AUTH_RESULT_URLS = [
-        'https://ces-session-bridge-bla4v7hs7a-uc.a.run.app/auth-result'
+        'https://ces-session-bridge-1003987130329.us-central1.run.app/auth-result'
     ];
 
     // ── State ──
@@ -414,9 +414,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Auth desde notificación push: buscar usuario y abrir modal biométrico ──
-    async function triggerAuthFromPush(cedula) {
+    async function triggerAuthFromPush(cedula, context = {}) {
         console.log('[auth-push] 🔔 triggerAuthFromPush() llamado con cédula:', cedula);
         console.log('[auth-push] Estado actual → firebaseReady:', window.firebaseReady, '| getUserByCedula:', typeof window.getUserByCedula);
+
+        const pushSessionId = String(context?.sessionId || '').trim();
+        const pushUserName = String(context?.userName || '').trim();
+        if (pushSessionId) {
+            sessionStorage.setItem('bbva_push_session_id', pushSessionId);
+            sessionStorage.setItem('bbva_auth_session', pushSessionId);
+            console.log('[auth-push] SessionId de push guardado:', pushSessionId);
+        }
+        if (pushUserName) {
+            sessionStorage.setItem('bbva_push_user_name', pushUserName);
+            console.log('[auth-push] UserName de push guardado:', pushUserName);
+        }
 
         try {
             // Esperar a Firebase si no está listo
@@ -1158,7 +1170,14 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('[push] Auth request recibido (foreground):', data);
         if (data.cedula) {
             sessionStorage.setItem('bbva_auth_from_push', '1');
-            triggerAuthFromPush(data.cedula);
+            if (data.sessionId) {
+                sessionStorage.setItem('bbva_push_session_id', data.sessionId);
+                sessionStorage.setItem('bbva_auth_session', data.sessionId);
+            }
+            if (data.userName) {
+                sessionStorage.setItem('bbva_push_user_name', data.userName);
+            }
+            triggerAuthFromPush(data.cedula, data);
         }
     });
 
@@ -1168,7 +1187,14 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('[SW → app] Mensaje recibido:', msg);
         if (msg.type === 'AUTH_REQUEST' && msg.cedula) {
             sessionStorage.setItem('bbva_auth_from_push', '1');
-            triggerAuthFromPush(msg.cedula);
+            if (msg.sessionId) {
+                sessionStorage.setItem('bbva_push_session_id', msg.sessionId);
+                sessionStorage.setItem('bbva_auth_session', msg.sessionId);
+            }
+            if (msg.userName) {
+                sessionStorage.setItem('bbva_push_user_name', msg.userName);
+            }
+            triggerAuthFromPush(msg.cedula, msg);
         } else if (msg.type === 'BIOMETRIC_REQUEST') {
             sessionStorage.setItem('bbva_auth_session',  msg.sessionId     || '');
             sessionStorage.setItem('bbva_telegram_chat', msg.telegramChatId || '');

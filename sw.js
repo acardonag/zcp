@@ -26,9 +26,29 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     console.log('[SW v14] Instalando...');
     self.skipWaiting();
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-    );
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_NAME);
+        const results = await Promise.allSettled(
+            ASSETS.map(async (asset) => {
+                const response = await fetch(asset, { cache: 'no-cache' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} al cachear ${asset}`);
+                }
+                await cache.put(asset, response);
+            })
+        );
+
+        const failed = results
+            .map((result, index) => ({ result, asset: ASSETS[index] }))
+            .filter(({ result }) => result.status === 'rejected');
+
+        if (failed.length) {
+            console.warn('[SW v14] Algunos assets no se pudieron precachear:', failed.map(({ asset, result }) => ({
+                asset,
+                error: result.reason?.message || String(result.reason)
+            })));
+        }
+    })());
 });
 
 // ── Activate ───────────────────────────────────────────────────
