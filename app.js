@@ -423,10 +423,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pushSessionId) {
             sessionStorage.setItem('bbva_push_session_id', pushSessionId);
             sessionStorage.setItem('bbva_auth_session', pushSessionId);
+            localStorage.setItem('bbva_push_session_id', pushSessionId);
+            localStorage.setItem('bbva_auth_session', pushSessionId);
             console.log('[auth-push] SessionId de push guardado:', pushSessionId);
         }
         if (pushUserName) {
             sessionStorage.setItem('bbva_push_user_name', pushUserName);
+            localStorage.setItem('bbva_push_user_name', pushUserName);
             console.log('[auth-push] UserName de push guardado:', pushUserName);
         }
 
@@ -650,11 +653,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     const pushSessionId =
                         sessionStorage.getItem('bbva_push_session_id') ||
                         sessionStorage.getItem('bbva_auth_session') ||
+                        localStorage.getItem('bbva_push_session_id') ||
+                        localStorage.getItem('bbva_auth_session') ||
                         '';
                     const pushUserName  = sessionStorage.getItem('bbva_push_user_name')  || localStorage.getItem('bbva_user') || '';
+                    console.log('[fingerprint] Preparando notifyAgentAuthResult', {
+                        pushSessionId,
+                        cedula: localStorage.getItem('bbva_user_id') || '',
+                        userName: pushUserName
+                    });
                     sessionStorage.removeItem('bbva_push_session_id');
                     sessionStorage.removeItem('bbva_auth_session');
                     sessionStorage.removeItem('bbva_push_user_name');
+                    localStorage.removeItem('bbva_push_session_id');
+                    localStorage.removeItem('bbva_auth_session');
+                    localStorage.removeItem('bbva_push_user_name');
                     if (pushSessionId) {
                         try {
                             await notifyAgentAuthResult({
