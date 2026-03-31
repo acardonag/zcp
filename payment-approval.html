@@ -959,6 +959,15 @@
                 return;
             }
 
+            console.log('[BBVA Payment] Notificando resultado de pago', {
+                approved,
+                sessionId,
+                orderId,
+                orderKey,
+                cedula,
+                productName
+            });
+
             const payload = {
                 orderId,
                 orderKey,
