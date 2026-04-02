@@ -781,11 +781,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 req.onerror   = e => reject(e.target.error);
             });
             const now     = Date.now();
-            const pending = all.find(p =>
+            let pending = all.find(p =>
                 p.cedula  === cedula &&
                 p.status  === 'pending' &&
                 (now - p.timestamp) < FIVE_MIN
             );
+
+            // Fallback: si la push no llegó, consultar el backend local
+            if (!pending) {
+                try {
+                    const backendUrl = (typeof window !== 'undefined' && window.VOICE_AGENT_BACKEND_URL)
+                        ? window.VOICE_AGENT_BACKEND_URL
+                        : 'http://localhost:8000';
+                    const r = await fetch(`${backendUrl}/pending-payment/${encodeURIComponent(cedula)}`);
+                    if (r.ok) {
+                        const d = await r.json();
+                        if (d.found) {
+                            pending = { ...d, timestamp: Date.now(), status: 'pending' };
+                            console.log('[PendingPayment] ✅ Pago pendiente recuperado desde backend fallback:', pending.productName);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[PendingPayment] Backend fallback no disponible:', e.message);
+                }
+            }
+
             if (pending) {
                 const sub = document.getElementById('pending-sub-text');
                 if (sub) sub.innerHTML = `${pending.productName} &bull; <strong>$${parseInt(pending.amount).toLocaleString('es-CO')}</strong>`;
