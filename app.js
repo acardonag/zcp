@@ -19,7 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let loginStep     = 'cedula';
     let loginUserData = null;
     const AGENT_AUTH_RESULT_URLS = [
-        'https://ces-session-bridge-1003987130329.us-central1.run.app/auth-result'
+        'https://ces-session-bridge-1003987130329.us-central1.run.app/auth-result',
+        // Backend de voz: se añade cuando esté en Cloud Run (configurar en config.js)
+        ...(typeof window !== 'undefined' && window.VOICE_AGENT_BACKEND_URL
+            ? [window.VOICE_AGENT_BACKEND_URL + '/auth-result']
+            : [])
     ];
 
     // ── State ──
@@ -603,12 +607,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.querySelector('.modal-cancel')?.addEventListener('click', () => {
+        const isFromPush = sessionStorage.getItem('bbva_auth_from_push') === '1';
         biometricModal.style.display = 'none';
         // Ocultar info de usuario push al cancelar
         const userInfo = document.getElementById('biometric-user-info');
         if (userInfo) userInfo.style.display = 'none';
         sessionStorage.removeItem('bbva_auth_from_push');
-        console.log('[biometric] Modal cancelado');
+        console.log('[biometric] Modal cancelado | isFromPush:', isFromPush);
+
+        // Si venía de notificación push, notificar RECHAZADO al agente de voz
+        if (isFromPush) {
+            const pushSessionId =
+                sessionStorage.getItem('bbva_push_session_id') ||
+                sessionStorage.getItem('bbva_auth_session')    ||
+                localStorage.getItem('bbva_push_session_id')  ||
+                localStorage.getItem('bbva_auth_session')     || '';
+            const pushUserName = sessionStorage.getItem('bbva_push_user_name') || localStorage.getItem('bbva_user') || '';
+            const cedula = localStorage.getItem('bbva_user_id') || loginUserData?.cedula || '';
+            console.log('[biometric cancel] Enviando RECHAZADO → sessionId:', pushSessionId, '| cedula:', cedula);
+            if (pushSessionId) {
+                notifyAgentAuthResult({ status: 'RECHAZADO', sessionId: pushSessionId, cedula, userName: pushUserName })
+                    .catch(err => console.warn('[biometric cancel] Error notificando rechazo:', err.message));
+            }
+            // Limpiar todas las claves de sesión push
+            ['bbva_push_session_id', 'bbva_auth_session', 'bbva_push_user_name'].forEach(k => {
+                sessionStorage.removeItem(k);
+                localStorage.removeItem(k);
+            });
+        }
     });
 
     document.getElementById('fingerprint-scan')?.addEventListener('click', () => {

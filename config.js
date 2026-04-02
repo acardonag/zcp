@@ -9,3 +9,7 @@ export const BBVA_FIREBASE_CONFIG = {
 };
 
 export const BBVA_FIREBASE_VAPID_KEY = 'BMZi10qT5B_s2BonvSbZIUohtFeVnuS3MZqt2UrVH1QQb9K3wKLG9uwMj3U-I0GLe9C9tkMoR463gtjukurUX1o';
+
+// URL del backend Gemini Live (vacío hasta despliegue en Cloud Run).
+// Cuando esté desplegado, ponlo aquí: 'https://TU_CLOUD_RUN_URL'
+export const VOICE_AGENT_BACKEND_URL = '';
