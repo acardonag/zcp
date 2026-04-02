@@ -1000,7 +1000,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         orderId,
+                        orderKey,
                         sessionId,
+                        storeId,
+                        cedula,
                         status: 'processing'
                     })
                 });
