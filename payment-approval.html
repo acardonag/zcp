@@ -861,6 +861,13 @@
         const sessionId   = sessionIdFromQuery || sessionIdFromState;
         const cedula      = params.get('cedula')    || localStorage.getItem('bbva_user_id') || '';
         const storeId     = params.get('storeId')   || '';
+        const resolveStoreName = (value) => {
+            const normalized = String(value || '').trim().toLowerCase();
+            if (normalized === 'woocommerce-steelblue') return 'WooCommerce Steelblue';
+            if (normalized === 'woocommerce-lightcyan') return 'WooCommerce Lightcyan';
+            return '';
+        };
+        const storeName   = params.get('storeName') || resolveStoreName(storeId);
         const productId   = params.get('productId') || '';
         const shippingRecipient  = params.get('shippingRecipient') || '';
         const shippingAddress    = params.get('shippingAddress') || '';
@@ -1003,6 +1010,7 @@
                         orderKey,
                         sessionId,
                         storeId,
+                        storeName,
                         cedula,
                         status: 'processing'
                     })
