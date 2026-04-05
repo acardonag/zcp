@@ -1,6 +1,6 @@
 import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-import { getMessaging, getToken, onMessage }       from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js';
+import { getMessaging, getToken, onMessage, isSupported } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js';
 import { BBVA_FIREBASE_CONFIG, BBVA_FIREBASE_VAPID_KEY } from './config.js';
 
 // ── Configuración Firebase por runtime para poder cambiar de proyecto sin tocar el bundle ──
@@ -9,7 +9,25 @@ const VAPID_KEY = BBVA_FIREBASE_VAPID_KEY;
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db          = getFirestore(firebaseApp);
-const messaging   = getMessaging(firebaseApp);
+let messaging     = null;
+
+async function ensureMessaging() {
+    if (messaging) return messaging;
+
+    try {
+        const supported = await isSupported();
+        if (!supported) {
+            console.warn('[FCM] Messaging no soportado en este navegador/contexto');
+            return null;
+        }
+
+        messaging = getMessaging(firebaseApp);
+        return messaging;
+    } catch (err) {
+        console.warn('[FCM] No se pudo inicializar Messaging:', err?.message || err);
+        return null;
+    }
+}
 
 function generateDeviceId() {
     const existing = localStorage.getItem('bbva_device_id');
@@ -298,6 +316,11 @@ async function getTransactions(cedula, maxItems = 50) {
 async function initPushNotifications(cedula, options = {}) {
     const { promptPermission = false } = options;
     try {
+        const messagingInstance = await ensureMessaging();
+        if (!messagingInstance) {
+            return null;
+        }
+
         if (!('Notification' in window)) {
             console.warn('[FCM] Este navegador no soporta notificaciones');
             return null;
@@ -330,7 +353,7 @@ async function initPushNotifications(cedula, options = {}) {
         const existingSub = await swReg.pushManager.getSubscription();
         console.log('[FCM] Suscripción previa:', existingSub ? '✅ existe' : '❌ ninguna');
 
-        const token = await getToken(messaging, {
+        const token = await getToken(messagingInstance, {
             vapidKey:                  VAPID_KEY,
             serviceWorkerRegistration: swReg
         });
@@ -367,39 +390,43 @@ async function initPushNotifications(cedula, options = {}) {
 }
 
 // ── Escuchar mensajes FCM en FOREGROUND ───────────────────────
-onMessage(messaging, (payload) => {
-    console.log('[FCM] Mensaje en foreground:', payload);
-    const data  = payload.data || {};
-    const notif = payload.notification || {};
-    const title = notif.title || 'BBVA Colombia';
-    const body  = notif.body  || '';
+ensureMessaging().then((messagingInstance) => {
+    if (!messagingInstance) return;
 
-    // 1️⃣ Notificación nativa via SW (funciona en PWA y navegador)
-    if (Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then((swReg) => {
-            swReg.showNotification(title, {
-                body,
-                icon:    '/icono-pwa.png',
-                badge:   '/icono-pwa.png',
-                tag:     data.type || 'bbva-foreground',
-                vibrate: [200, 100, 200],
-                data
-            });
-            console.log('[FCM] ✅ Notificación nativa mostrada via SW');
-        }).catch(err => console.error('[FCM] ❌ Error mostrando notificación:', err));
-    } else {
-        console.warn('[FCM] ⚠️ Permiso de notificaciones:', Notification.permission);
-    }
+    onMessage(messagingInstance, (payload) => {
+        console.log('[FCM] Mensaje en foreground:', payload);
+        const data  = payload.data || {};
+        const notif = payload.notification || {};
+        const title = notif.title || 'BBVA Colombia';
+        const body  = notif.body  || '';
 
-    // 2️⃣ Toast / modal dentro de la app según el tipo
-    // AUTH_REQUEST: solo mostrar notificación nativa (el flujo se activa cuando el usuario hace clic)
-    if (data.type === 'BIOMETRIC_REQUEST') {
-        window.dispatchEvent(new CustomEvent('bbva-biometric-request', { detail: data }));
-    } else if (data.type !== 'AUTH_REQUEST') {
-        window.dispatchEvent(new CustomEvent('bbva-push-notification', {
-            detail: { title, body, data }
-        }));
-    }
+        // 1️⃣ Notificación nativa via SW (funciona en PWA y navegador)
+        if (Notification.permission === 'granted') {
+            navigator.serviceWorker.ready.then((swReg) => {
+                swReg.showNotification(title, {
+                    body,
+                    icon:    '/icono-pwa.png',
+                    badge:   '/icono-pwa.png',
+                    tag:     data.type || 'bbva-foreground',
+                    vibrate: [200, 100, 200],
+                    data
+                });
+                console.log('[FCM] ✅ Notificación nativa mostrada via SW');
+            }).catch(err => console.error('[FCM] ❌ Error mostrando notificación:', err));
+        } else {
+            console.warn('[FCM] ⚠️ Permiso de notificaciones:', Notification.permission);
+        }
+
+        // 2️⃣ Toast / modal dentro de la app según el tipo
+        // AUTH_REQUEST: solo mostrar notificación nativa (el flujo se activa cuando el usuario hace clic)
+        if (data.type === 'BIOMETRIC_REQUEST') {
+            window.dispatchEvent(new CustomEvent('bbva-biometric-request', { detail: data }));
+        } else if (data.type !== 'AUTH_REQUEST') {
+            window.dispatchEvent(new CustomEvent('bbva-push-notification', {
+                detail: { title, body, data }
+            }));
+        }
+    });
 });
 
 window.firebaseDB                  = db;
